@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Annie Xie" />
+
+<meta name="date" content="2024-04-16" />
+
+<title>regression-simulation</title>
+
+<script src="site_libs/header-attrs-2.26/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">drift_matrix_factorization</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">regression-simulation</h1>
+<h4 class="author">Annie Xie</h4>
+<h4 class="date">2024-04-16</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-04-23
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>drift_matrix_factorization/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20240416code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20240416)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20240416code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20240416)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstronga986598">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong> a986598
+</a>
+</p>
+</div>
+<div id="strongRepositoryversionstronga986598"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version a986598.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown (<code>analysis/regression-simulation.Rmd</code>)
+and HTML (<code>docs/regression-simulation.html</code>) files. If you’ve
+configured a remote Git repository (see <code>?wflow_git_remote</code>),
+click on the hyperlinks in the table below to view the files as they
+were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+a986598
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-04-23
+</td>
+<td>
+Add initial analysis of tree-simulated data
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>In this project, I am interested in exploring how well a
+regression-based factorization can recover tree structure in the data.
+Therefore, I wanted to run a simulation where the “true” loadings matrix
+has a tree structure (i.e. the loadings are binary and hierarchical),
+and see how well the regression-based factorization matches the true
+values.</p>
+</div>
+<div id="packages-and-functions" class="section level1">
+<h1>Packages and Functions</h1>
+<pre class="r"><code>library(flashier)</code></pre>
+<pre><code>Loading required package: ebnm</code></pre>
+<pre><code>Loading required package: magrittr</code></pre>
+<pre class="r"><code>library(ebnm)
+library(ashr)
+library(ggplot2)
+library(pheatmap)
+library(NNLM)</code></pre>
+<pre class="r"><code>plot_heatmap &lt;- function(L, title = &quot;&quot;){
+  ### define the color map
+  cols &lt;- colorRampPalette(c(&quot;gray96&quot;, &quot;red&quot;))(49)
+  brks &lt;- seq(min(L), max(L), length=50)
+  
+  plt &lt;- pheatmap(L, show_rownames = FALSE, show_colnames = FALSE, cluster_rows = FALSE, cluster_cols = FALSE, color = cols, breaks = brks, main = title)
+  return(plt)
+}</code></pre>
+<pre class="r"><code>structure_plot_general = function(Lhat,Fhat,grouping,title=NULL, loadings_order = &#39;embed&#39;, print_plot=FALSE, seed=12345, n_samples = NULL, gap=40, show_legend=TRUE, K = NULL, plot.colors = NULL){
+  set.seed(seed)
+
+  #if not told to plot all samples, then plot a sub-sample
+  if(is.null(n_samples)&amp;all(loadings_order == &quot;embed&quot;)){
+    n_samples = 2000
+  }
+  
+  if(is.null(plot.colors)){
+    plot.colors &lt;- rainbow(ncol(Lhat))
+  }
+
+  #normalize L such that each factor has a maximum loading value of 1
+  #results in an error if all the entries of a column are 0
+  # this doesn&#39;t do the normalization if all the entries are below 1 (think about!)
+  #Lhat = apply(Lhat,2,function(z){z/max(max(z),1)})
+  
+  #if not told to plot all factors, then plot the requested subset
+  if(!is.null(K)){
+    Lhat = Lhat[,1:K]
+    Fhat = Fhat[,1:K]
+  }
+  
+  Fhat = matrix(1,nrow=3,ncol=ncol(Lhat))
+  
+  #add column names to Lhat if it doesn&#39;t have column names
+  if(is.null(colnames(Lhat))){
+    colnames(Lhat) &lt;- paste0(&quot;k&quot;,1:ncol(Lhat))
+  }
+  
+  #define multinom_topic_model_fit for structure plot function
+  fit_list &lt;- list(L = Lhat,F = Fhat)
+  class(fit_list) &lt;- c(&quot;multinom_topic_model_fit&quot;, &quot;list&quot;)
+  
+  #plot
+  p &lt;- fastTopics::structure_plot(fit_list,grouping = grouping, loadings_order = loadings_order, n = n_samples, colors = plot.colors, gap = gap,verbose=F) + labs(y = &quot;loading&quot;,color = &quot;dim&quot;,fill = &quot;dim&quot;) + ggtitle(title)
+  if(!show_legend){
+    p &lt;- p + theme(legend.position=&quot;none&quot;)
+  }
+  if(print_plot){
+    print(p)
+  }
+  return(p)
+}</code></pre>
+<pre class="r"><code>source(&quot;~/Documents/PhD 3/Research/EBCD/ebcd_functions.R&quot;)
+#source(&quot;~/Documents/PhD 3/Research/EBCD/gbcd_functions.R&quot;)
+source(&quot;~/Documents/PhD 3/Research/EBCD/gbcd-workflow/code/fit_cov_ebnmf.R&quot;)</code></pre>
+</div>
+<div id="data-generation" class="section level1">
+<h1>Data Generation</h1>
+<p>To generate the data, I modified code I found from Jason’s github
+repository. We are modeling six populations that follow a tree
+structure. Therefore, the loadings matrix is binary and has a
+hierarchical structure. The entries of the factor matrix are generated
+using normal random variables. Normal random noise is added to the
+product of the loadings and factor matrix.</p>
+<pre class="r"><code># modified from Jason&#39;s code
+sim_6pops_noadmix &lt;- function(pop_sizes,
+                      branch_sds,
+                      indiv_sd,
+                      n_genes = 1000,
+                      seed = 666) {
+  set.seed(seed)
+
+  n &lt;- sum(pop_sizes)
+  p &lt;- n_genes
+
+  FF &lt;- matrix(rnorm(11 * p, sd = rep(branch_sds, each = p)), ncol = 11)
+  LL &lt;- matrix(0, nrow = n, ncol = 11)
+  LL[, 1] &lt;- 1
+  LL[, 2] &lt;- rep(c(1, 1, 1, 0, 0, 0), times = pop_sizes)
+  LL[, 3] &lt;- rep(c(0, 0, 0, 1, 1, 1), times = pop_sizes)
+  LL[, 4] &lt;- rep(c(1, 0, 0, 0, 0, 0), times = pop_sizes)
+  LL[, 5] &lt;- rep(c(0, 0, 0, 1, 0, 0), times = pop_sizes)
+  LL[, 6] &lt;- rep(c(0, 1, 1, 0, 0, 0), times = pop_sizes)
+  LL[, 7] &lt;- rep(c(0, 0, 0, 0, 1, 1), times = pop_sizes)
+  LL[, 8] &lt;- rep(c(0, 1, 0, 0, 0, 0), times = pop_sizes)
+  LL[, 9] &lt;- rep(c(0, 0, 1, 0, 0, 0), times = pop_sizes)
+  LL[, 10] &lt;- rep(c(0, 0, 0, 0, 1, 0), times = pop_sizes)
+  LL[, 11] &lt;- rep(c(0, 0, 0, 0, 0, 1), times = pop_sizes)
+
+
+  divmat &lt;- matrix(nrow = n, ncol = 6)
+  divmat[, 1] &lt;- LL[, 1]
+  divmat[, 2] &lt;- LL[, 2] - LL[, 3]
+  divmat[, 3] &lt;- LL[, 4] - LL[, 6]
+  divmat[, 4] &lt;- LL[, 5] - LL[, 7]
+  divmat[, 5] &lt;- LL[, 8] - LL[, 9]
+  divmat[, 6] &lt;- LL[, 10] - LL[, 11]
+
+  E &lt;- matrix(rnorm(n * p, sd = indiv_sd), nrow = n)
+
+  pops &lt;- rep(LETTERS[1:length(pop_sizes)], times = pop_sizes)
+
+  return(list(Y = LL %*% t(FF) + E, LL = LL, FF = FF, divmat = divmat, pops = pops))
+}</code></pre>
+<pre class="r"><code># modified from Jason&#39;s code
+sim_data_6pop &lt;- sim_6pops_noadmix(pop_sizes = c(rep(1, 6)),
+                           branch_sds = c(20, 10, 6, 4, 4, 4, 2, 2, 2, 1, 1),
+                           indiv_sd = 1,
+                           n_genes = 10000)</code></pre>
+<pre class="r"><code>dim(sim_data_6pop$Y)</code></pre>
+<pre><code>[1]     6 10000</code></pre>
+<pre class="r"><code>plot_heatmap(sim_data_6pop$LL)</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>structure_plot_general(sim_data_6pop$LL%*% diag(c(20, 10, 6, 4, 4, 4, 2, 2, 2, 1, 1)), 
+                       sim_data_6pop$LL%*% diag(c(20, 10, 6, 4, 4, 4, 2, 2, 2, 1, 1)), 
+                       n_samples = 6,
+                       plot.colors = c(&#39;#FF3030&#39;, &#39;#1E90FF&#39;, &#39;#B23AEE&#39;, &#39;#FFFF00&#39;, &#39;#FF3E96&#39;, &#39;#00EE00&#39;,
+                                       &#39;#97FFFF&#39;, &#39;#FF7F00&#39;, &#39;#FFAEB9&#39;, &#39;#698B22&#39;, &#39;#FFE7BA&#39;))</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>We see that populations 1,2, and 5 have a shared component (the
+bright yellow bar). In addition, populations 3,4, and 6 have a shared
+component (the orange bar). Furthermore, populations 1 and 5 have
+another shared component (the blue bar), and populations 3 and 6 have
+another shared component (the sea foam green bar).</p>
+</div>
+<div id="using-penalized-regression-to-factorize"
+class="section level1">
+<h1>Using Penalized Regression to Factorize</h1>
+<p>Here, we will use penalized-regression to find a factorization of the
+data matrix. The details can be found in the
+<code>small-sample-factorization</code> file.</p>
+<div id="hypothesis" class="section level2">
+<h2>Hypothesis</h2>
+<p>I’m not sure if the penalized-regression will find a factorization
+that is hierarchical. I think theoretically it should be able to if the
+data has a hierarchical structure. But I’m unsure if the correlation
+between the vectorized <span class="math inline">\(LL^{T}\)</span>
+vectors will cause the penalized regression to just pick one covariate
+out of many correlated covariates. I looked at the correlation between
+the vectors, and the highest values are about 0.5, which is not very
+large, but not insignificant either.</p>
+</div>
+<div id="analysis" class="section level2">
+<h2>Analysis</h2>
+<pre class="r"><code>#small sample workflow
+small_sample_matrix_factorization &lt;- function(P, alpha_l1 = 0){
+  dat &lt;- t(P) %*% P/ncol(t(P))
+  n = nrow(t(P))
+  
+  L_options &lt;- t(expand.grid(replicate(n, 0:1, simplify = FALSE)))
+
+  LLt_options &lt;- matrix(rep(0, ncol(L_options)*n*n), ncol = ncol(L_options))
+  for (i in 1:ncol(L_options)){
+    LLt_options[,i] &lt;- c(L_options[,i]%*%t(L_options[,i])) #check this
+  }
+
+  nnlm_fit &lt;- nnlm(LLt_options, as.matrix(c(dat), ncol = 1), alpha = c(0,0,alpha_l1))
+  
+  indices_keep &lt;- (nnlm_fit$coefficients &gt; 0)
+  lambda &lt;- nnlm_fit$coefficients[indices_keep]
+  X_keep &lt;- LLt_options[,indices_keep]
+  
+  rank_one_matrices &lt;- lapply(split(X_keep, seq(ncol(X_keep))), function(x){return(matrix(x, ncol = n))})
+  
+  LLt_estimate &lt;- matrix(rep(0, prod(dim(dat))), ncol = ncol(dat))
+  for (i in 1:length(lambda)){
+    LLt_estimate &lt;- LLt_estimate + lambda[i]*rank_one_matrices[[i]]
+  }
+  
+  L_est &lt;- L_options[,indices_keep] %*% diag(sqrt(lambda))
+  return(list(nnlm_fit = nnlm_fit, LLt_estimate = LLt_estimate, L_est = L_est))
+}</code></pre>
+<pre class="r"><code>set.seed(2042)
+fit.regression &lt;- small_sample_matrix_factorization(t(sim_data_6pop$Y), alpha_l1 = 13.5)</code></pre>
+<pre><code>Warning in nnlm(LLt_options, as.matrix(c(dat), ncol = 1), alpha = c(0, 0, : x
+does not have a full column rank. Solution may not be unique.</code></pre>
+<pre class="r"><code>observed.vals &lt;- sim_data_6pop$Y %*% t(sim_data_6pop$Y)/ncol(sim_data_6pop$Y)</code></pre>
+<pre class="r"><code>sum((observed.vals - fit.regression$LLt_estimate)^2)</code></pre>
+<pre><code>[1] 2685324</code></pre>
+<pre class="r"><code>ggplot(data = NULL, aes(x = c(observed.vals), y = c(fit.regression$LLt_estimate))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = &#39;red&#39;)</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="visualization-of-loadings" class="section level2">
+<h2>Visualization of Loadings</h2>
+<pre class="r"><code>dim(fit.regression$L_est)</code></pre>
+<pre><code>[1]  6 11</code></pre>
+<p>This is a heatmap of the loadings:</p>
+<pre class="r"><code>plot_heatmap(fit.regression$L_est)</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_heatmap(t(t(fit.regression$L_est)/apply(fit.regression$L_est,2, max)))</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is a structure plot of the loadings:</p>
+<pre class="r"><code>structure_plot_general(fit.regression$L_est, fit.regression$L_est, 
+                       n_samples = 6,
+                       plot.colors = c(&#39;#FF3030&#39;, &#39;#1E90FF&#39;, &#39;#B23AEE&#39;, &#39;#FFFF00&#39;, &#39;#FF3E96&#39;, &#39;#00EE00&#39;,
+                                       &#39;#97FFFF&#39;, &#39;#FF7F00&#39;, &#39;#FFAEB9&#39;, &#39;#698B22&#39;, &#39;#FFE7BA&#39;))</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="observations" class="section level2">
+<h2>Observations</h2>
+<p>The results show that populations 3,4, and 6 have a shared component
+(the red bar). Populations 3,4, and 6 also have a shared component in
+the true loadings matrix. In addition, populations 1,2, and 5 have some
+shared components. In the true loadings matrix, populations 1,2, and 5
+have a singular shared component (besides the baseline component).
+However, in the results, these populations have three shared components.
+Furthermore, some of these components are also shared with other
+populations, which is not the case for the true loadings matrix.</p>
+<p>One thing of note is these results are not hierarchical. For example,
+populations 1,2,4, and 5 have a shared component (the dark blue bar);
+however population 4 has a component (the red bar) that is not shared
+with populations 1,2, and 5, but shared with other populations. Given
+that the true loadings matrix is hierarchical, it would be ideal for our
+estimate to also have a hierarchical structure. It seems like the
+regression-based method has difficulty capturing hierarchical structure
+in the data.</p>
+<p>One possible explanation could be the signal to noise ratio for some
+of the branches. Another possible explanation could be the correlation
+between different <span class="math inline">\(L\)</span> options – the
+penalized regression randomly chooses one covariate among all of the
+moderately correlated ones. I’m curious what the results would look like
+if we used SuSie to fit the regression.</p>
+<p>Another thing of note is the fitted values do not match the observed
+values well. I’m not exactly sure why – perhaps it is related to the
+level of penalization I used. I’m not exactly sure.</p>
+</div>
+</div>
+<div id="using-ebcd-to-factorize-for-comparison" class="section level1">
+<h1>Using EBCD to Factorize (for comparison)</h1>
+<div id="hypothesis-1" class="section level2">
+<h2>Hypothesis</h2>
+<p>EBCD should give us an orthogonal factor matrix, which can be
+interpreted as the drifts, along with the loadings for the drift events.
+Previous analyses have shown that EBCD doesn’t appear to have issues
+with fitting <span class="math inline">\(K\)</span> factors where <span
+class="math inline">\(K\)</span> is larger than the number of samples. I
+hypothesize that EBCD should be able to recover the hierarchical
+structure of the loadings since we use the generalized binary prior and
+the branches of the tree can be thought of as orthogonal factors.</p>
+</div>
+<div id="analysis-1" class="section level2">
+<h2>Analysis</h2>
+<pre class="r"><code>set.seed(295)
+fit.ebcd &lt;- ebcd(X = t(sim_data_6pop$Y), Kmax = 11, ebnm_fn = ebnm::ebnm_generalized_binary)</code></pre>
+<pre class="r"><code>ebcd.fitted.vals &lt;- fit.ebcd$EL %*% t(fit.ebcd$EL)</code></pre>
+<pre class="r"><code>sum((observed.vals - ebcd.fitted.vals)^2)</code></pre>
+<pre><code>[1] 2.206055e-08</code></pre>
+<pre class="r"><code>ggplot(data = NULL, aes(x = c(observed.vals), y = c(ebcd.fitted.vals))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = &#39;red&#39;)</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-22-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="visualization-of-loadings-1" class="section level2">
+<h2>Visualization of Loadings</h2>
+<pre class="r"><code>plot_heatmap(fit.ebcd$EL)</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-23-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_heatmap(t(t(fit.ebcd$EL)/apply(fit.ebcd$EL,2, max)))</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>structure_plot_general(fit.ebcd$EL, fit.ebcd$EL, 
+                       n_samples = 6,
+                       plot.colors = c(&#39;#FF3030&#39;, &#39;#1E90FF&#39;, &#39;#B23AEE&#39;, &#39;#FFFF00&#39;, &#39;#FF3E96&#39;, &#39;#00EE00&#39;,
+                                       &#39;#97FFFF&#39;, &#39;#FF7F00&#39;, &#39;#FFAEB9&#39;, &#39;#698B22&#39;, &#39;#FFE7BA&#39;))</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="observations-1" class="section level2">
+<h2>Observations</h2>
+<p>The EBCD results do not perfectly capture the tree structure of the
+true loadings matrix. The results suggest a significant shared component
+among populations 3,4, and 6. In addition, there is a shared component
+(the indigo bar) among populations 1,2, and 5. In the true loadings
+matrix, populations 1 and 5 have an additional shared component – that
+does not clearly hold for the EBCD results. In the true loadings matrix,
+populations 3 and 6 also have an additional shared component –
+populations 3 and 6 do share a green bar that population 4 does not
+significantly have. (There are two green bars that are very close in
+color, so I need to change the color settings to get a clearer
+understanding of the differences.)</p>
+<p>I know that Joon has been using a version of EBCD with a tree-based
+initialization. So I am curious if using a tree-based initialization
+would induce tree structure into the final estimate.</p>
+<p>The fitted values from the EBCD output do match the observed values
+well. Even the diagonal entries match well which is different from what
+I found in other simulations.</p>
+</div>
+</div>
+<div id="using-gbcd-to-factorize" class="section level1">
+<h1>Using GBCD to Factorize</h1>
+<div id="hypothesis-2" class="section level2">
+<h2>Hypothesis</h2>
+<p>Previous analyses applying GBCD to these small matrices did not lead
+to good results. More specifically, GBCD has difficulty adding more than
+a few factors. Therefore, I predict the same thing will happen in this
+simulation.</p>
+</div>
+<div id="analysis-2" class="section level2">
+<h2>Analysis</h2>
+<pre class="r"><code>fit.gbcd &lt;- flash_fit_cov_ebnmf(Y = sim_data_6pop$Y, Kmax = 11)</code></pre>
+</div>
+<div id="observations-2" class="section level2">
+<h2>Observations</h2>
+<p>I had some technical difficulties when running GBCD because the
+method only fit one factor. Therefore, I do not have an output, but in
+general, we would expect the method to fit more than one factor. The
+first factor is often interpreted as a baseline factor, so we would
+expect to fit additional factors to represent sources of variation. I’m
+not exactly sure why GBCD performs so poorly on these examples. Perhaps
+it is the very small sample size.</p>
+</div>
+</div>
+<div
+id="exploration-of-penalized-regression-with-different-penalty-levels"
+class="section level1">
+<h1>Exploration of Penalized Regression with different penalty
+levels</h1>
+<div id="alpha-9" class="section level2">
+<h2>alpha = 9</h2>
+<pre class="r"><code>set.seed(2042)
+fit.regression_a9 &lt;- small_sample_matrix_factorization(t(sim_data_6pop$Y), alpha_l1 = 9)</code></pre>
+<pre><code>Warning in nnlm(LLt_options, as.matrix(c(dat), ncol = 1), alpha = c(0, 0, : x
+does not have a full column rank. Solution may not be unique.</code></pre>
+<pre class="r"><code>sum((observed.vals - fit.regression_a9$LLt_estimate)^2)</code></pre>
+<pre><code>[1] 2888426</code></pre>
+<pre class="r"><code>ggplot(data = NULL, aes(x = c(observed.vals), y = c(fit.regression_a9$LLt_estimate))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = &#39;red&#39;)</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dim(fit.regression_a9$L_est)</code></pre>
+<pre><code>[1]  6 18</code></pre>
+<p>This is a heatmap of the loadings:</p>
+<pre class="r"><code>plot_heatmap(fit.regression_a9$L_est)</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is a structure plot of the loadings:</p>
+<pre class="r"><code>structure_plot_general(fit.regression_a9$L_est, fit.regression_a9$L_est, 
+                       n_samples = 6,
+                       plot.colors = c(&#39;#FF3030&#39;, &#39;#1E90FF&#39;, &#39;#B23AEE&#39;, &#39;#FFFF00&#39;, &#39;#FF3E96&#39;, &#39;#00EE00&#39;,
+                                       &#39;#97FFFF&#39;, &#39;#FF7F00&#39;, &#39;#FFAEB9&#39;, &#39;#698B22&#39;, &#39;#FFE7BA&#39;, &#39;#FFD700&#39;,
+                                       &#39;#A52A2A&#39;, &#39;#68228B&#39;, &#39;#F0FFF0&#39;, &#39;#CDCDC1&#39;, &#39;#708090&#39;, &#39;#8B5A00&#39;))</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="alpha-20" class="section level2">
+<h2>alpha = 20</h2>
+<pre class="r"><code>set.seed(2042)
+fit.regression_a20 &lt;- small_sample_matrix_factorization(t(sim_data_6pop$Y), alpha_l1 = 20)</code></pre>
+<pre><code>Warning in nnlm(LLt_options, as.matrix(c(dat), ncol = 1), alpha = c(0, 0, : x
+does not have a full column rank. Solution may not be unique.</code></pre>
+<pre class="r"><code>sum((observed.vals - fit.regression_a20$LLt_estimate)^2)</code></pre>
+<pre><code>[1] 3023331</code></pre>
+<pre class="r"><code>ggplot(data = NULL, aes(x = c(observed.vals), y = c(fit.regression_a20$LLt_estimate))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = &#39;red&#39;)</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>dim(fit.regression_a20$L_est)</code></pre>
+<pre><code>[1] 6 8</code></pre>
+<p>This is a heatmap of the loadings:</p>
+<pre class="r"><code>plot_heatmap(fit.regression_a20$L_est)</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-37-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is a structure plot of the loadings:</p>
+<pre class="r"><code>structure_plot_general(fit.regression_a20$L_est, fit.regression_a20$L_est, 
+                       n_samples = 6,
+                       plot.colors = c(&#39;#FF3030&#39;, &#39;#1E90FF&#39;, &#39;#B23AEE&#39;, &#39;#FFFF00&#39;, &#39;#FF3E96&#39;, &#39;#00EE00&#39;,
+                                       &#39;#97FFFF&#39;, &#39;#FF7F00&#39;))</code></pre>
+<p><img src="figure/regression-simulation.Rmd/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="notes-to-self" class="section level1">
+<h1>Notes to self</h1>
+<p>Another potential experiment is to use the regression fit to
+initialize EBCD</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.3.2 (2023-10-31)
+Platform: aarch64-apple-darwin20 (64-bit)
+Running under: macOS Ventura 13.6
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/Chicago
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] NNLM_0.4.4      pheatmap_1.0.12 ggplot2_3.5.0   ashr_2.2-63    
+[5] flashier_1.0.7  magrittr_2.0.3  ebnm_1.1-2      workflowr_1.7.1
+
+loaded via a namespace (and not attached):
+ [1] pbapply_1.7-2      rlang_1.1.3        git2r_0.33.0       horseshoe_0.2.0   
+ [5] compiler_4.3.2     getPass_0.2-4      callr_3.7.6        vctrs_0.6.5       
+ [9] quantreg_5.97      quadprog_1.5-8     stringr_1.5.1      pkgconfig_2.0.3   
+[13] crayon_1.5.2       fastmap_1.1.1      mcmc_0.9-8         labeling_0.4.3    
+[17] utf8_1.2.4         promises_1.2.1     rmarkdown_2.26     ps_1.7.6          
+[21] MatrixModels_0.5-3 purrr_1.0.2        xfun_0.43          cachem_1.0.8      
+[25] trust_0.1-8        jsonlite_1.8.8     progress_1.2.3     highr_0.10        
+[29] later_1.3.2        irlba_2.3.5.1      parallel_4.3.2     prettyunits_1.2.0 
+[33] R6_2.5.1           bslib_0.7.0        stringi_1.8.3      RColorBrewer_1.1-3
+[37] SQUAREM_2021.1     jquerylib_0.1.4    Rcpp_1.0.12        knitr_1.45        
+[41] httpuv_1.6.15      Matrix_1.6-5       splines_4.3.2      tidyselect_1.2.1  
+[45] rstudioapi_0.16.0  yaml_2.3.8         processx_3.8.4     lattice_0.22-6    
+[49] tibble_3.2.1       withr_3.0.0        coda_0.19-4.1      evaluate_0.23     
+[53] Rtsne_0.17         survival_3.5-8     RcppParallel_5.1.7 pillar_1.9.0      
+[57] whisker_0.4.1      plotly_4.10.4      softImpute_1.4-1   generics_0.1.3    
+[61] rprojroot_2.0.4    invgamma_1.1       truncnorm_1.0-9    hms_1.1.3         
+[65] munsell_0.5.1      scales_1.3.0       glue_1.7.0         lazyeval_0.2.2    
+[69] tools_4.3.2        data.table_1.15.4  SparseM_1.81       fs_1.6.3          
+[73] cowplot_1.1.3      grid_4.3.2         tidyr_1.3.1        MCMCpack_1.7-0    
+[77] colorspace_2.1-0   deconvolveR_1.2-1  cli_3.6.2          fansi_1.0.6       
+[81] mixsqp_0.3-54      viridisLite_0.4.2  dplyr_1.1.4        uwot_0.1.16       
+[85] gtable_0.3.4       fastTopics_0.6-142 sass_0.4.9         digest_0.6.35     
+[89] ggrepel_0.9.5      farver_2.1.1       htmlwidgets_1.6.4  htmltools_0.5.8   
+[93] lifecycle_1.0.4    httr_1.4.7         MASS_7.3-60.0.1   </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
