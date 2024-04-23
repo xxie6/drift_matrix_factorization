@@ -1,0 +1,432 @@
+---
+title: "small-sample-factorization"
+author: "Annie Xie"
+date: "2024-04-16"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+
+In this project, we are interested in exploring methods for matrix factorization with small sample sizes. The motivation for this comes from the ADMIXTURE model from population genetics (though Matthew is also interested in applying this methodology to single cell data). In population genetics, we have the admixture model
+$$G = 2PQ^{T}$$
+which is used to characterize sub-populations of a larger population. $Q$ are the admixture proportions and $P$ are the allele frequencies of the various sub-populations. Often times, when interpreting these results, people look at $Q$, the admixture proportions. However, this matrix does not capture all the similarities and differences. For example, there may be two sub-populations whose allele frequencies are very similar. Therefore, in the $Q$ matrix, individuals from those groups would be loaded on different factors. But, you cannot tell from $Q$ alone that the corresponding factors are actually quite similar.  
+  
+Therefore, Matthew's idea was to further decompose $G$ into the following:
+$$G = 2 ZMQ^{T}.$$
+The idea behind this decomposition is the similarities between the sub-populations in one single matrix, $MQ^{T}$. This decomposition is equivalent to finding the admixture decomposition, and then decomposing $P$ as
+$$P = ZM$$
+where $Z$ is orthogonal and interpreted as the drift factors, and $M$ is the corresponding loadings. This decomposition intuitively assumes the sub-populations follow a tree structure. 
+  
+The need for a small sample matrix factorization comes from this step -- $P$ is small because it's gene by topic and thus $P^{T}P$ is a small matrix. In this analysis, we will explore different methods of fitting this decomposition.  
+
+# Data
+
+The data matrix, $P$, is the population allele frequency matrix from applying the eight-population ADMIXTURE model to data from the 1000 Genomes Project.
+
+```{r}
+P <- readRDS('~/Documents/PhD 3/Research/EBCD/gbcd-P/P.rds')
+dim(P)
+```
+
+
+```{r}
+observed.vals <- t(P) %*% P/ncol(t(P))
+```
+
+# Packages and functions for anlaysis
+
+```{r}
+library(flashier)
+library(ebnm)
+library(ashr)
+library(ggplot2)
+library(pheatmap)
+library(NNLM)
+#library(tictoc)
+source("~/Documents/PhD 3/Research/EBCD/gbcd-workflow/code/fit_cov_ebnmf.R")
+```
+
+```{r}
+source("~/Documents/PhD 3/Research/EBCD/ebcd_functions.R")
+#source("~/Documents/PhD 3/Research/EBCD/gbcd_functions.R")
+```
+
+```{r}
+plot_heatmap <- function(L, title = ""){
+  ### define the color map
+  cols <- colorRampPalette(c("gray96", "red"))(49)
+  brks <- seq(min(L), max(L), length=50)
+  
+  plt <- pheatmap(L, show_rownames = FALSE, show_colnames = FALSE, cluster_rows = FALSE, cluster_cols = FALSE, color = cols, breaks = brks, main = title)
+  return(plt)
+}
+```
+
+```{r}
+structure_plot_general = function(Lhat,Fhat,grouping,title=NULL, loadings_order = 'embed', print_plot=FALSE, seed=12345, n_samples = NULL, gap=40, show_legend=TRUE, K = NULL, plot.colors = NULL){
+  set.seed(seed)
+
+  #if not told to plot all samples, then plot a sub-sample
+  if(is.null(n_samples)&all(loadings_order == "embed")){
+    n_samples = 2000
+  }
+  
+  if(is.null(plot.colors)){
+    plot.colors <- rainbow(ncol(Lhat))
+  }
+
+  #normalize L such that each factor has a maximum loading value of 1
+  #results in an error if all the entries of a column are 0
+  # this doesn't do the normalization if all the entries are below 1 (think about!)
+  #Lhat = apply(Lhat,2,function(z){z/max(max(z),1)})
+  
+  #if not told to plot all factors, then plot the requested subset
+  if(!is.null(K)){
+    Lhat = Lhat[,1:K]
+    Fhat = Fhat[,1:K]
+  }
+  
+  Fhat = matrix(1,nrow=3,ncol=ncol(Lhat))
+  
+  #add column names to Lhat if it doesn't have column names
+  if(is.null(colnames(Lhat))){
+    colnames(Lhat) <- paste0("k",1:ncol(Lhat))
+  }
+  
+  #define multinom_topic_model_fit for structure plot function
+  fit_list <- list(L = Lhat,F = Fhat)
+  class(fit_list) <- c("multinom_topic_model_fit", "list")
+  
+  #plot
+  p <- fastTopics::structure_plot(fit_list,grouping = grouping, loadings_order = loadings_order, n = n_samples, colors = plot.colors, gap = gap,verbose=F) + labs(y = "loading",color = "dim",fill = "dim") + ggtitle(title)
+  if(!show_legend){
+    p <- p + theme(legend.position="none")
+  }
+  if(print_plot){
+    print(p)
+  }
+  return(p)
+}
+```
+
+# Using GBCD to decompose P
+
+Since we are interested in decomposing $P$ via an orthogonal matrix factorization, one option is to apply the GBCD method to $P$. GBCD should give us an orthogonal factor matrix, which can be interpreted as the drifts, along with the loadings for the drift events.   
+  
+One note is that we are interested in 
+$$P = ZM$$
+where $Z$ is orthogonal. GBCD fits the following:
+$$Y = LF^{T}$$
+where $F$ is orthogonal. So to get the desired factorization, we will need to work with the transpose of $P$.
+
+## Hypothesis
+
+GBCD should give us an orthogonal factor matrix, which can be interpreted as the drifts, along with the loadings for the drift events. One thing about GBCD is it is usually used in the case where the number of factors is smaller than $n$ and $p$ (the dimensions of $Y$). In this case, we are looking for something similar to a tree structure and we have a small sample size (for this dataset, the number of samples is 8). Therefore, it is possible that the desired number of factors is larger than $\min\{n,p\}$. I'm not sure if GBCD would return a factor matrix where the number of factors is larger than $\min\{n,p\}$.
+
+## Analysis
+
+This is the code to run GBCD on $P$. I have the results saved in a file and will load them in.
+```{r, eval = FALSE}
+fit.gbcd <- flash_fit_cov_ebnmf(Y = t(P), Kmax = 10)
+```
+
+```{r}
+fit.gbcd <- readRDS('data/P_gbcd_fit.rds')
+```
+
+## Visualization of Loadings
+
+This is a heatmap of the loadings:
+```{r}
+plot_heatmap(fit.gbcd$L)
+```
+
+This is a structure plot of the loadings:
+```{r}
+structure_plot_general(fit.gbcd$L, fit.gbcd$L, n_samples = 8)
+```
+
+## Observations
+
+The GBCD results suggest that populations 5 and 8 have a shared source of variation. That is the main difference that is found in the results.  
+  
+One note is that the $L$ estimate from GBCD is scaled such that the maximum loading value for each factor is 1. I think in this setting, we may want to visualized the a scaled $L$, scaled such that $P^{T}P \approx LL^{T}$. Another observation is that GBCD only fits 3 factors (one of which is considered a baseline). 
+
+### Observations from others
+Something that Joon found when running this analysis was the first factor was essentially zero. 
+
+```{r}
+sqrt(colSums(fit.gbcd$F$lfc^2)) # GEP1 is numerically zero
+```
+
+Taking that into account, I guess GBCD essentially fits 2 factors. Yusha also tried running this example, and she said that the initialization step in GBCD does not perform well and only adds two factors. She said "Maybe when $n$ is too small the strategy of decomposing the covariance matrix ($n \times n$) does not work as well as decomposing the data matrix ($n \times p$ where $p$ is very large)."  
+  
+Overall, this loadings estimate is not as informative as some of the other estimates Joon has found using this data.  
+
+# Using EBCD to decompose P
+
+Another option for decomposing $P$ is the EBCD method.
+
+## Hypothesis
+
+Similar to GBCD, EBCD should give us an orthogonal factor matrix, which can be interpreted as the drifts, along with the loadings for the drift events. I'm not sure if EBCD will have the same issue that GBCD has with adding more factors.
+
+## Analysis
+
+```{r}
+set.seed(295)
+fit.ebcd <- ebcd(X = P, Kmax = 15, ebnm_fn = ebnm::ebnm_generalized_binary)
+```
+
+## Visualization of Loadings
+
+```{r}
+plot_heatmap(fit.ebcd$EL)
+```
+
+```{r}
+plot_heatmap(t(t(fit.ebcd$EL)/apply(fit.ebcd$EL,2, max)))
+```
+
+```{r}
+structure_plot_general(fit.ebcd$EL, fit.ebcd$EL, n_samples = 8)
+```
+
+## Observations
+
+The EBCD results suggest that populations 5 and 8 have a shared component of variation. (This was also found in the GBCD results). The results also suggest that populations 1 and 7 have a shared component (the golden yellow bar referring to k3). In addition, populations 2 and 4 appear to have a shared component (the neon green bar referring to k6). There are also other shared components captured -- I'm just highlighting some of the main ones I see. 
+
+The EBCD method was able to add more than two-three factors. Therefore, it is able to capture finer grain levels of variation than the GBCD results. It seems like it should be able to capture tree-structure in the data (if it exists). Some of the results are hierarchical, but it is not perfectly hierarchical. For example, populations 5 and 8 both have membership in k14 (the hot pink bar); however, population 4 does not have membership in k2 while population 8 does. This is not necessarily a bad thing since this is real data, and the data may not follow a strict tree structure.
+
+# Using Penalized Regression to decompose P
+
+Another idea that Matthew posed is to use penalized regression to decompose $P$. We can think of the factorizing the Gram matrix as fitting the following:
+$$XX^{T} \approx \sum_{k} \lambda_k \cdot l_k l_k^{T}$$
+where $l_k$ is a binary $r$-dimensional vector and $\lambda_k$ is non-negative. Since $l_k$ is binary, there are $2^r$ options for $l_k l_k^{T}$. Matthew's idea is to vectorize the matrices and use non-negative linear regression. We are interested in using a regularized non-negative linear regression (like lasso but with the restriction that the coefficients are non-negative), so that some of the coefficients are zero (and so this can be treated like a variable selection problem).
+
+## Hypothesis
+
+This method should find a binary $L$ (that hopefully represents something close to a tree structure) such that $P^{T} P \approx LDL^{T}$ where $D$ is a diagonal matrix. Since we are fitting $P^{T}P \approx \tilde{L}\tilde{L}^{T}$ where $\tilde{L} = L \sqrt{D}$, we can use $\tilde{L}$ to find a corresponding $F$ that is (at least close to) orthogonal. Since we are doing a penalized regularization, the strength of the penalty will dictate how many factors we choose.
+
+I think this method will not have the same issue as GBCD with adding factors since linear regression usually likes to include more covariates even if the corresponding $\beta$ coefficient is small. (This, of course, depends on the level of penalization that is used). I'm not sure if the result will be hierarchical due to the moderate correlation between the $L$ options.
+
+## Analysis
+
+This is the code to run the penalized regression. The `nnlm` function allows you pick a weight, $\alpha$ for an $l_0$ penalty on the coefficients. For this example, I chose $\alpha = 0.05$. However, I think ideally you would pick this value via cross validation.
+
+```{r}
+#small sample workflow
+small_sample_matrix_factorization <- function(P, alpha_l1 = 0){
+  dat <- t(P) %*% P/ncol(t(P))
+  n = nrow(t(P))
+  
+  L_options <- t(expand.grid(replicate(n, 0:1, simplify = FALSE)))
+
+  LLt_options <- matrix(rep(0, ncol(L_options)*n*n), ncol = ncol(L_options))
+  for (i in 1:ncol(L_options)){
+    LLt_options[,i] <- c(L_options[,i]%*%t(L_options[,i])) #check this
+  }
+
+  nnlm_fit <- nnlm(LLt_options, as.matrix(c(dat), ncol = 1), alpha = c(0,0,alpha_l1))
+  
+  indices_keep <- (nnlm_fit$coefficients > 0)
+  lambda <- nnlm_fit$coefficients[indices_keep]
+  X_keep <- LLt_options[,indices_keep]
+  
+  rank_one_matrices <- lapply(split(X_keep, seq(ncol(X_keep))), function(x){return(matrix(x, ncol = n))})
+  
+  LLt_estimate <- matrix(rep(0, prod(dim(dat))), ncol = ncol(dat))
+  for (i in 1:length(lambda)){
+    LLt_estimate <- LLt_estimate + lambda[i]*rank_one_matrices[[i]]
+  }
+  
+  L_est <- L_options[,indices_keep] %*% diag(sqrt(lambda))
+  return(list(nnlm_fit = nnlm_fit, LLt_estimate = LLt_estimate, L_est = L_est))
+}
+```
+
+```{r}
+P.fit.regression <- small_sample_matrix_factorization(P, alpha_l1 = 0.05)
+``` 
+
+```{r}
+sum((observed.vals - P.fit.regression$LLt_estimate)^2)
+```
+
+```{r}
+ggplot(data = NULL, aes(x = c(observed.vals), y = c(P.fit.regression$LLt_estimate))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = 'red')
+```
+
+## Visualization of Loadings
+
+```{r}
+dim(P.fit.regression$L_est)
+```
+
+The penalized regression fits a total of 11 factors.
+
+This is a heatmap of the loadings:
+```{r}
+plot_heatmap(P.fit.regression$L_est)
+```
+
+```{r}
+plot_heatmap(t(t(P.fit.regression$L_est)/apply(P.fit.regression$L_est,2, max)))
+```
+
+This is a structure plot of the loadings:
+```{r}
+structure_plot_general(P.fit.regression$L_est, P.fit.regression$L_est, n_samples = 8)
+```
+
+## Observations
+
+The regression-based results suggest that populations 1,2,3,4,6,7 have a shared component. There are also a lot of other smaller shared components. Populations 5 and 8 do look similar. However, the components in these populations are also seen in other populations, and so it is hard to interpret the differences between these populations and the other populations.
+
+The $L$ estimate from the regression fit has a total of 11 factors, which is more than what the GBCD estimate had. One qualitative feature of the estimate is it is not hierarchical. Therefore, this particular loadings estimate is hard to interpret as a tree since it does not have the needed hierarchical structure. I suppose this is not entirely a bad thing because sometimes data is not well represented by a tree. But the other estimates Joon found did have a roughly hierarchical structure, so this estimate is inconsistent with those (again, not necessarily a bad thing). If I had used simulated data that does have a tree structure, then it would be easier for me to tell if this method can accurately pick up on it.  
+  
+As I noted previously, I chose the level of penalization myself. However, it is probably better to choose the penalization level via cross validation.  
+  
+There is also a question of how well this method would scale since it requires inputting $2^{r}$ covariates into the regression problem. For small $r$, this can be okay. But for large $r$, this could cause some issues.  
+
+# Experiment: Initialize GBCD with the Regression Fit
+
+Since Yusha mentioned that the initialization step in GBCD performs poorly, I was curious as to whether using a different initialization would perform better. Therefore, I wanted to see what happens when you use the $L$ estimate from the penalized regression fit as the initialization for GBCD.
+
+## Hypothesis
+
+I hypothesize that since our initialization has 11 factors, then the GBCD estimate for $L$ should have somewhere near that many factors (I don't have any real reason for this. It's possible that GBCD will zero out these factors.). I also imagine that the loading values will no longer be strictly binary since GBCD will place the generalized-binary prior over the loadings. This is not a bad thing since we are interested in relaxing the tree structure assumptions of the data to capture non-tree-structured patterns.
+
+## Analysis
+
+This is the code to run the GBCD method post-initialization:
+```{r}
+#gbcd code post initialization
+gbcd_L_fit <- function(Y, gbcd.L.init = NULL, cov.init = NULL, scale = 0.1, threshold = 0.8){
+if ((is.null(cov.init) == TRUE) && (is.null(gbcd.L.init) == FALSE)){
+  cov.init <- list(gbcd.L.init, gbcd.L.init)
+}
+
+dat <- Y %*% t(Y)/ncol(Y)
+
+prior <- flash_ebnm(prior_family = "generalized_binary", scale = scale) #default scale is 0.1
+  
+### backfit a small number of iterations
+kmax <- which.max(colSums(cov.init[[1]]))
+
+fit.cov <- flash_init(dat, var_type = 0) %>%
+  flash_factors_init(
+    init = lapply(cov.init, function(x) x[, kmax, drop = FALSE]),
+    ebnm_fn = ebnm_unimodal_nonnegative
+    ) %>%
+  flash_factors_init(
+    init = lapply(cov.init, function(x) x[, -c(kmax), drop = FALSE]),
+    ebnm_fn = prior
+    ) %>%
+  flash_backfit(extrapolate = FALSE, maxiter = 25, verbose = 1)
+
+#refine fit by considering diagonal component
+fit.cov <- fit_ebmf_to_YY(dat = dat, fl = fit.cov, prior = prior, extrapolate = FALSE, maxiter = 25, verbose = 1)$fl
+
+#should I include step that checks if pve > 0?
+kset <- (fit.cov$pve > 0)
+kall <- 1:fit.cov$n_factors
+if(!all(kset)){
+  fit.cov <- flash_factors_remove(fit.cov, kset=kall[!kset])
+}
+fit.cov <- fit_ebmf_to_YY(dat = dat, fl = fit.cov, prior = prior, extrapolate = FALSE, maxiter =500, verbose = 1)$fl
+
+#assess concordance
+k.order <- order(fit.cov$pve, decreasing = TRUE)
+fit.L <- fit.cov$L_pm[, k.order]
+fit.Ltilde <- fit.cov$F_pm[, k.order]
+corr <- diag(cor(fit.L, fit.Ltilde))
+fit.L <- t(t(fit.L)/apply(fit.L, 2, max))
+
+#snmf
+# init.F <- t(solve(crossprod(fit.L), crossprod(fit.L, Y))) #need to change this -- LtL is not invertible if k is too small i think
+# fit.snmf <- flash_init(Y, S = 1/sqrt(nrow(Y)), var_type = 2) %>%
+#   flash_factors_init(
+#     init = list(as.matrix(fit.L), as.matrix(init.F)),
+#     ebnm_fn = c(prior, ebnm_point_laplace)
+#     ) %>%
+#   flash_factors_fix(kset = 1:ncol(fit.L), which_dim = "loadings") %>%
+#   flash_backfit(extrapolate = FALSE, verbose = 1)
+
+# J <- ncol(Y)
+# genes <- colnames(Y)
+# F.est <- matrix(0, J, ncol(fit.snmf$L_pm))
+# rownames(F.est) <- genes
+# colnames(F.est) <- colnames(fit.snmf$L_pm)
+# F.se <- F.est
+# F.z.ash <- F.est
+# F.lfsr.ash <- F.est
+# 
+# for (j in 1:J) {
+#   y     <- Y[,j]
+#   dat.x   <- as.data.frame(cbind(y, fit.snmf$L_pm))
+#   fit   <- lm(y ~ 0 + ., dat.x)
+#   coefs <- summary(fit)$coefficients
+#   F.est[j,] <- coefs[, "Estimate"]
+#   F.se[j,]  <- coefs[, "Std. Error"]
+# }
+# 
+# for(k in 1:ncol(F.est)){
+#   fit <- ash(F.est[,k], F.se[,k], mixcompdist = "normal", method = "shrink")
+#   F.z.ash[,k] <- fit$result$PosteriorMean/fit$result$PosteriorSD
+#   F.lfsr.ash[,k] <- fit$result$lfsr
+# }
+
+fit.gbcd.ldf <- ldf(fit.cov, type = 'i') 
+rescale.L <- fit.gbcd.ldf$L %*% diag(sqrt(fit.gbcd.ldf$D))
+
+k.idx <- which(corr > threshold)
+L.pm <- rescale.L[,k.order][, k.idx]
+# L.pm <- fit.snmf$L_pm[, k.idx]
+colnames(L.pm) <- c("Baseline", paste0("GEP", 1:(ncol(L.pm)-1)))
+# F.lfc <- fit.snmf$F_pm[, k.idx]/log(2)
+# F.z <- F.z.ash[, k.idx]
+# F.lfsr <- F.lfsr.ash[, k.idx]
+# colnames(F.lfc) <- colnames(L.pm)
+# colnames(F.z) <- colnames(L.pm)
+# colnames(F.lfsr) <- colnames(L.pm)
+# return(list(L = L.pm, F = list(lfc = F.lfc, z_score = F.z, lfsr = F.lfsr), s2 = fit.cov$s2))
+return(list(L = L.pm))
+}
+```
+  
+One thing to note is I return $L$ scaled such that $P^{T}P \approx LL^{T}$.  
+  
+This is the code to run GBCD using the penalized regression estimate as an initialization. I have the results saved in another file and will load them in.  
+```{r, eval = FALSE}
+fit.gbcd_regression_init <- gbcd_L_fit(t(P), gbcd.L.init =fit.regression$L_est, cov.init = NULL, scale = 0.1, threshold = 0.8)
+```
+
+```{r}
+fit.gbcd_regression_init <- readRDS('data/P_gbcd_regression_init_fit.rds')
+```
+
+## Technical Difficulties
+
+I had some technical difficulties fitting $F$. More specifically, I had issues with the code `init.F <- t(solve(crossprod(fit.L), crossprod(fit.L, Y)))`. I believe this is because when $L$ is $n \times k$ with $k > n$, then $L^{T}L$ becomes $k \times k$ but with rank $n < k$, and thus is not invertible. Since I am not really looking at the $F$ estimates at the moment, I decided to just return the estimate for $L$. But this is something that will need to be figured out later.
+
+## Visualization of Loadings
+
+```{r}
+plot_heatmap(fit.gbcd_regression_init$L)
+```
+
+```{r}
+structure_plot_general(fit.gbcd_regression_init$L, fit.gbcd_regression_init$L, n_samples = 8)
+```
+
+## Observations
+
+While the GBCD method did retain 11 factors, the sources of variation are really only captures in 2 factors. More specifically, the results suggest that populations 1,2,3,4,6, and 7 have a shared component, and populations 1,3, and 7 have a further shared component. This estimate does have hierarchical structure, and therefore can be more easily interpreted as a tree. However, this estimate still looks pretty different from the other estimates that Joon has found. In particular, the factors in Joon's estimate corresponded to different sources of variation, whereas most of the factors in this estimate do not (the loadings for these factors are the same across all of the 8 populations).
+
+# Notes to Self
+In his dissertation draft, Joon mentions that the EBCD output is non-sparse and thus harder to interpret than the other method he developed. In that setting, the number of genes is relatively large compared to the number of "samples" (i.e. the number of sub-populations). Therefore, I wonder if the fit term of the objective function dominates. I also wonder if the version of EBCD that lies about the number of genes would lead to more interpretable results.
+
+
