@@ -1,0 +1,391 @@
+---
+title: "regression-simulation"
+author: "Annie Xie"
+date: "2024-04-16"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+
+In this project, I am interested in exploring how well a regression-based factorization can recover tree structure in the data. Therefore, I wanted to run a simulation where the "true" loadings matrix has a tree structure (i.e. the loadings are binary and hierarchical), and see how well the regression-based factorization matches the true values.
+
+# Packages and Functions
+
+```{r}
+library(flashier)
+library(ebnm)
+library(ashr)
+library(ggplot2)
+library(pheatmap)
+library(NNLM)
+```
+
+```{r}
+plot_heatmap <- function(L, title = ""){
+  ### define the color map
+  cols <- colorRampPalette(c("gray96", "red"))(49)
+  brks <- seq(min(L), max(L), length=50)
+  
+  plt <- pheatmap(L, show_rownames = FALSE, show_colnames = FALSE, cluster_rows = FALSE, cluster_cols = FALSE, color = cols, breaks = brks, main = title)
+  return(plt)
+}
+```
+
+```{r}
+structure_plot_general = function(Lhat,Fhat,grouping,title=NULL, loadings_order = 'embed', print_plot=FALSE, seed=12345, n_samples = NULL, gap=40, show_legend=TRUE, K = NULL, plot.colors = NULL){
+  set.seed(seed)
+
+  #if not told to plot all samples, then plot a sub-sample
+  if(is.null(n_samples)&all(loadings_order == "embed")){
+    n_samples = 2000
+  }
+  
+  if(is.null(plot.colors)){
+    plot.colors <- rainbow(ncol(Lhat))
+  }
+
+  #normalize L such that each factor has a maximum loading value of 1
+  #results in an error if all the entries of a column are 0
+  # this doesn't do the normalization if all the entries are below 1 (think about!)
+  #Lhat = apply(Lhat,2,function(z){z/max(max(z),1)})
+  
+  #if not told to plot all factors, then plot the requested subset
+  if(!is.null(K)){
+    Lhat = Lhat[,1:K]
+    Fhat = Fhat[,1:K]
+  }
+  
+  Fhat = matrix(1,nrow=3,ncol=ncol(Lhat))
+  
+  #add column names to Lhat if it doesn't have column names
+  if(is.null(colnames(Lhat))){
+    colnames(Lhat) <- paste0("k",1:ncol(Lhat))
+  }
+  
+  #define multinom_topic_model_fit for structure plot function
+  fit_list <- list(L = Lhat,F = Fhat)
+  class(fit_list) <- c("multinom_topic_model_fit", "list")
+  
+  #plot
+  p <- fastTopics::structure_plot(fit_list,grouping = grouping, loadings_order = loadings_order, n = n_samples, colors = plot.colors, gap = gap,verbose=F) + labs(y = "loading",color = "dim",fill = "dim") + ggtitle(title)
+  if(!show_legend){
+    p <- p + theme(legend.position="none")
+  }
+  if(print_plot){
+    print(p)
+  }
+  return(p)
+}
+```
+
+```{r}
+source("~/Documents/PhD 3/Research/EBCD/ebcd_functions.R")
+#source("~/Documents/PhD 3/Research/EBCD/gbcd_functions.R")
+source("~/Documents/PhD 3/Research/EBCD/gbcd-workflow/code/fit_cov_ebnmf.R")
+```
+
+# Data Generation
+
+To generate the data, I modified code I found from Jason's github repository. We are modeling six populations that follow a tree structure. Therefore, the loadings matrix is binary and has a hierarchical structure. The entries of the factor matrix are generated using normal random variables. Normal random noise is added to the product of the loadings and factor matrix.
+
+```{r}
+# modified from Jason's code
+sim_6pops_noadmix <- function(pop_sizes,
+                      branch_sds,
+                      indiv_sd,
+                      n_genes = 1000,
+                      seed = 666) {
+  set.seed(seed)
+
+  n <- sum(pop_sizes)
+  p <- n_genes
+
+  FF <- matrix(rnorm(11 * p, sd = rep(branch_sds, each = p)), ncol = 11)
+  LL <- matrix(0, nrow = n, ncol = 11)
+  LL[, 1] <- 1
+  LL[, 2] <- rep(c(1, 1, 1, 0, 0, 0), times = pop_sizes)
+  LL[, 3] <- rep(c(0, 0, 0, 1, 1, 1), times = pop_sizes)
+  LL[, 4] <- rep(c(1, 0, 0, 0, 0, 0), times = pop_sizes)
+  LL[, 5] <- rep(c(0, 0, 0, 1, 0, 0), times = pop_sizes)
+  LL[, 6] <- rep(c(0, 1, 1, 0, 0, 0), times = pop_sizes)
+  LL[, 7] <- rep(c(0, 0, 0, 0, 1, 1), times = pop_sizes)
+  LL[, 8] <- rep(c(0, 1, 0, 0, 0, 0), times = pop_sizes)
+  LL[, 9] <- rep(c(0, 0, 1, 0, 0, 0), times = pop_sizes)
+  LL[, 10] <- rep(c(0, 0, 0, 0, 1, 0), times = pop_sizes)
+  LL[, 11] <- rep(c(0, 0, 0, 0, 0, 1), times = pop_sizes)
+
+
+  divmat <- matrix(nrow = n, ncol = 6)
+  divmat[, 1] <- LL[, 1]
+  divmat[, 2] <- LL[, 2] - LL[, 3]
+  divmat[, 3] <- LL[, 4] - LL[, 6]
+  divmat[, 4] <- LL[, 5] - LL[, 7]
+  divmat[, 5] <- LL[, 8] - LL[, 9]
+  divmat[, 6] <- LL[, 10] - LL[, 11]
+
+  E <- matrix(rnorm(n * p, sd = indiv_sd), nrow = n)
+
+  pops <- rep(LETTERS[1:length(pop_sizes)], times = pop_sizes)
+
+  return(list(Y = LL %*% t(FF) + E, LL = LL, FF = FF, divmat = divmat, pops = pops))
+}
+```
+
+```{r}
+# modified from Jason's code
+sim_data_6pop <- sim_6pops_noadmix(pop_sizes = c(rep(1, 6)),
+                           branch_sds = c(20, 10, 6, 4, 4, 4, 2, 2, 2, 1, 1),
+                           indiv_sd = 1,
+                           n_genes = 10000)
+```
+
+```{r}
+dim(sim_data_6pop$Y)
+```
+
+```{r}
+plot_heatmap(sim_data_6pop$LL)
+```
+
+```{r}
+structure_plot_general(sim_data_6pop$LL%*% diag(c(20, 10, 6, 4, 4, 4, 2, 2, 2, 1, 1)), 
+                       sim_data_6pop$LL%*% diag(c(20, 10, 6, 4, 4, 4, 2, 2, 2, 1, 1)), 
+                       n_samples = 6,
+                       plot.colors = c('#FF3030', '#1E90FF', '#B23AEE', '#FFFF00', '#FF3E96', '#00EE00',
+                                       '#97FFFF', '#FF7F00', '#FFAEB9', '#698B22', '#FFE7BA'))
+```
+  
+We see that populations 1,2, and 5 have a shared component (the bright yellow bar). In addition, populations 3,4, and 6 have a shared component (the orange bar). Furthermore, populations 1 and 5 have another shared component (the blue bar), and populations 3 and 6 have another shared component (the sea foam green bar).
+
+# Using Penalized Regression to Factorize
+
+Here, we will use penalized-regression to find a factorization of the data matrix. The details can be found in the `small-sample-factorization` file. 
+
+## Hypothesis
+
+I'm not sure if the penalized-regression will find a factorization that is hierarchical. I think theoretically it should be able to if the data has a hierarchical structure. But I'm unsure if the correlation between the vectorized $LL^{T}$ vectors will cause the penalized regression to just pick one covariate out of many correlated covariates. I looked at the correlation between the vectors, and the highest values are about 0.5, which is not very large, but not insignificant either.
+
+## Analysis
+
+```{r}
+#small sample workflow
+small_sample_matrix_factorization <- function(P, alpha_l1 = 0){
+  dat <- t(P) %*% P/ncol(t(P))
+  n = nrow(t(P))
+  
+  L_options <- t(expand.grid(replicate(n, 0:1, simplify = FALSE)))
+
+  LLt_options <- matrix(rep(0, ncol(L_options)*n*n), ncol = ncol(L_options))
+  for (i in 1:ncol(L_options)){
+    LLt_options[,i] <- c(L_options[,i]%*%t(L_options[,i])) #check this
+  }
+
+  nnlm_fit <- nnlm(LLt_options, as.matrix(c(dat), ncol = 1), alpha = c(0,0,alpha_l1))
+  
+  indices_keep <- (nnlm_fit$coefficients > 0)
+  lambda <- nnlm_fit$coefficients[indices_keep]
+  X_keep <- LLt_options[,indices_keep]
+  
+  rank_one_matrices <- lapply(split(X_keep, seq(ncol(X_keep))), function(x){return(matrix(x, ncol = n))})
+  
+  LLt_estimate <- matrix(rep(0, prod(dim(dat))), ncol = ncol(dat))
+  for (i in 1:length(lambda)){
+    LLt_estimate <- LLt_estimate + lambda[i]*rank_one_matrices[[i]]
+  }
+  
+  L_est <- L_options[,indices_keep] %*% diag(sqrt(lambda))
+  return(list(nnlm_fit = nnlm_fit, LLt_estimate = LLt_estimate, L_est = L_est))
+}
+```
+
+```{r}
+set.seed(2042)
+fit.regression <- small_sample_matrix_factorization(t(sim_data_6pop$Y), alpha_l1 = 13.5)
+``` 
+
+```{r}
+observed.vals <- sim_data_6pop$Y %*% t(sim_data_6pop$Y)/ncol(sim_data_6pop$Y)
+```
+
+```{r}
+sum((observed.vals - fit.regression$LLt_estimate)^2)
+```
+
+```{r}
+ggplot(data = NULL, aes(x = c(observed.vals), y = c(fit.regression$LLt_estimate))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = 'red')
+```
+
+## Visualization of Loadings
+
+```{r}
+dim(fit.regression$L_est)
+```
+
+This is a heatmap of the loadings:
+```{r}
+plot_heatmap(fit.regression$L_est)
+```
+
+```{r}
+plot_heatmap(t(t(fit.regression$L_est)/apply(fit.regression$L_est,2, max)))
+```
+
+This is a structure plot of the loadings:
+```{r}
+structure_plot_general(fit.regression$L_est, fit.regression$L_est, 
+                       n_samples = 6,
+                       plot.colors = c('#FF3030', '#1E90FF', '#B23AEE', '#FFFF00', '#FF3E96', '#00EE00',
+                                       '#97FFFF', '#FF7F00', '#FFAEB9', '#698B22', '#FFE7BA'))
+```
+
+## Observations
+
+The results show that populations 3,4, and 6 have a shared component (the red bar). Populations 3,4, and 6 also have a shared component in the true loadings matrix. In addition, populations 1,2, and 5 have some shared components. In the true loadings matrix, populations 1,2, and 5 have a singular shared component (besides the baseline component). However, in the results, these populations have three shared components. Furthermore, some of these components are also shared with other populations, which is not the case for the true loadings matrix.
+
+One thing of note is these results are not hierarchical. For example, populations 1,2,4, and 5 have a shared component (the dark blue bar); however population 4 has a component (the red bar) that is not shared with populations 1,2, and 5, but shared with other populations. Given that the true loadings matrix is hierarchical, it would be ideal for our estimate to also have a hierarchical structure. It seems like the regression-based method has difficulty capturing hierarchical structure in the data. 
+
+One possible explanation could be the signal to noise ratio for some of the branches. Another possible explanation could be the correlation between different $L$ options -- the penalized regression randomly chooses one covariate among all of the moderately correlated ones. I'm curious what the results would look like if we used SuSie to fit the regression.
+
+Another thing of note is the fitted values do not match the observed values well. I'm not exactly sure why -- perhaps it is related to the level of penalization I used. I'm not exactly sure.
+
+# Using EBCD to Factorize (for comparison)
+
+## Hypothesis
+
+EBCD should give us an orthogonal factor matrix, which can be interpreted as the drifts, along with the loadings for the drift events. Previous analyses have shown that EBCD doesn't appear to have issues with fitting $K$ factors where $K$ is larger than the number of samples. I hypothesize that EBCD should be able to recover the hierarchical structure of the loadings since we use the generalized binary prior and the branches of the tree can be thought of as orthogonal factors.
+
+## Analysis
+
+```{r}
+set.seed(295)
+fit.ebcd <- ebcd(X = t(sim_data_6pop$Y), Kmax = 11, ebnm_fn = ebnm::ebnm_generalized_binary)
+```
+
+```{r}
+ebcd.fitted.vals <- fit.ebcd$EL %*% t(fit.ebcd$EL)
+```
+
+```{r}
+sum((observed.vals - ebcd.fitted.vals)^2)
+```
+
+```{r}
+ggplot(data = NULL, aes(x = c(observed.vals), y = c(ebcd.fitted.vals))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = 'red')
+```
+
+## Visualization of Loadings
+
+```{r}
+plot_heatmap(fit.ebcd$EL)
+```
+
+```{r}
+plot_heatmap(t(t(fit.ebcd$EL)/apply(fit.ebcd$EL,2, max)))
+```
+
+```{r}
+structure_plot_general(fit.ebcd$EL, fit.ebcd$EL, 
+                       n_samples = 6,
+                       plot.colors = c('#FF3030', '#1E90FF', '#B23AEE', '#FFFF00', '#FF3E96', '#00EE00',
+                                       '#97FFFF', '#FF7F00', '#FFAEB9', '#698B22', '#FFE7BA'))
+```
+
+## Observations
+
+The EBCD results do not perfectly capture the tree structure of the true loadings matrix. The results suggest a significant shared component among populations 3,4, and 6. In addition, there is a shared component (the indigo bar) among populations 1,2, and 5. In the true loadings matrix, populations 1 and 5 have an additional shared component -- that does not clearly hold for the EBCD results. In the true loadings matrix, populations 3 and 6 also have an additional shared component -- populations 3 and 6 do share a green bar that population 4 does not significantly have. (There are two green bars that are very close in color, so I need to change the color settings to get a clearer understanding of the differences.)
+
+I know that Joon has been using a version of EBCD with a tree-based initialization. So I am curious if using a tree-based initialization would induce tree structure into the final estimate. 
+
+The fitted values from the EBCD output do match the observed values well. Even the diagonal entries match well which is different from what I found in other simulations.
+
+# Using GBCD to Factorize
+
+## Hypothesis
+
+Previous analyses applying GBCD to these small matrices did not lead to good results. More specifically, GBCD has difficulty adding more than a few factors. Therefore, I predict the same thing will happen in this simulation.
+
+## Analysis
+
+```{r, eval = FALSE}
+fit.gbcd <- flash_fit_cov_ebnmf(Y = sim_data_6pop$Y, Kmax = 11)
+```
+
+## Observations
+I had some technical difficulties when running GBCD because the method only fit one factor. Therefore, I do not have an output, but in general, we would expect the method to fit more than one factor. The first factor is often interpreted as a baseline factor, so we would expect to fit additional factors to represent sources of variation. I'm not exactly sure why GBCD performs so poorly on these examples. Perhaps it is the very small sample size.
+
+# Exploration of Penalized Regression with different penalty levels
+
+## alpha = 9
+
+```{r}
+set.seed(2042)
+fit.regression_a9 <- small_sample_matrix_factorization(t(sim_data_6pop$Y), alpha_l1 = 9)
+``` 
+
+```{r}
+sum((observed.vals - fit.regression_a9$LLt_estimate)^2)
+```
+
+```{r}
+ggplot(data = NULL, aes(x = c(observed.vals), y = c(fit.regression_a9$LLt_estimate))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = 'red')
+```
+
+```{r}
+dim(fit.regression_a9$L_est)
+```
+
+This is a heatmap of the loadings:
+```{r}
+plot_heatmap(fit.regression_a9$L_est)
+```
+
+This is a structure plot of the loadings:
+```{r}
+structure_plot_general(fit.regression_a9$L_est, fit.regression_a9$L_est, 
+                       n_samples = 6,
+                       plot.colors = c('#FF3030', '#1E90FF', '#B23AEE', '#FFFF00', '#FF3E96', '#00EE00',
+                                       '#97FFFF', '#FF7F00', '#FFAEB9', '#698B22', '#FFE7BA', '#FFD700',
+                                       '#A52A2A', '#68228B', '#F0FFF0', '#CDCDC1', '#708090', '#8B5A00'))
+```
+
+## alpha = 20
+
+```{r}
+set.seed(2042)
+fit.regression_a20 <- small_sample_matrix_factorization(t(sim_data_6pop$Y), alpha_l1 = 20)
+``` 
+
+```{r}
+sum((observed.vals - fit.regression_a20$LLt_estimate)^2)
+```
+
+```{r}
+ggplot(data = NULL, aes(x = c(observed.vals), y = c(fit.regression_a20$LLt_estimate))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = 'red')
+```
+
+```{r}
+dim(fit.regression_a20$L_est)
+```
+
+This is a heatmap of the loadings:
+```{r}
+plot_heatmap(fit.regression_a20$L_est)
+```
+
+This is a structure plot of the loadings:
+```{r}
+structure_plot_general(fit.regression_a20$L_est, fit.regression_a20$L_est, 
+                       n_samples = 6,
+                       plot.colors = c('#FF3030', '#1E90FF', '#B23AEE', '#FFFF00', '#FF3E96', '#00EE00',
+                                       '#97FFFF', '#FF7F00'))
+```
+
+
+# Notes to self
+Another potential experiment is to use the regression fit to initialize EBCD
+
+
+
+
