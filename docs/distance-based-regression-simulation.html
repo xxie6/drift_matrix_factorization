@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Annie Xie" />
+
+<meta name="date" content="2024-05-07" />
+
+<title>distance-based-regression-simulation</title>
+
+<script src="site_libs/header-attrs-2.27/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/main/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">drift_matrix_factorization</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">distance-based-regression-simulation</h1>
+<h4 class="author">Annie Xie</h4>
+<h4 class="date">2024-05-07</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+workflowr <span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
+</a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2024-06-30
+</p>
+<p>
+<strong>Checks:</strong> <span
+class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 7
+<span class="glyphicon glyphicon-exclamation-sign text-danger"
+aria-hidden="true"></span> 0
+</p>
+<p>
+<strong>Knit directory:</strong>
+<code>drift_matrix_factorization/</code> <span
+class="glyphicon glyphicon-question-sign" aria-hidden="true"
+title="This is the local directory in which the code in this file was executed.">
+</span>
+</p>
+<p>
+This reproducible <a href="https://rmarkdown.rstudio.com">R Markdown</a>
+analysis was created with <a
+  href="https://github.com/workflowr/workflowr">workflowr</a> (version
+1.7.1). The <em>Checks</em> tab describes the reproducibility checks
+that were applied when the results were created. The <em>Past
+versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguptodate">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>R Markdown file:</strong> up-to-date
+</a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguptodate"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great! Since the R Markdown file has been committed to the Git
+repository, you know the exact version of the code that produced these
+results.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the
+global environment can affect the analysis in your R Markdown file in
+unknown ways. For reproduciblity it’s best to always run the code in an
+empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20240416code">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Seed:</strong>
+<code>set.seed(20240416)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20240416code"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20240416)</code> was run prior to running
+the code in the R Markdown file. Setting a seed ensures that any results
+that rely on randomness, e.g. subsampling or permutations, are
+reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Session information:</strong>
+recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package
+versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be
+confident that you successfully produced the results during this
+run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr
+project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrong4d5b751">
+<span class="glyphicon glyphicon-ok text-success"
+aria-hidden="true"></span> <strong>Repository version:</strong> 4d5b751
+</a>
+</p>
+</div>
+<div id="strongRepositoryversionstrong4d5b751"
+class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development
+and connecting the code version to the results is critical for
+reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version 4d5b751.
+See the <em>Past versions</em> tab to see a history of the changes made
+to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for
+the analysis have been committed to Git prior to generating the results
+(you can use <code>wflow_publish</code> or
+<code>wflow_git_commit</code>). workflowr only checks the R Markdown
+file, but you know if there are other scripts or data files that it
+depends on. Below is the status of the Git repository when the results
+were generated:
+</p>
+<pre><code>
+Ignored files:
+    Ignored:    .DS_Store
+    Ignored:    .Rhistory
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not
+included in this status report because it is ok for generated content to
+have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+
+<p>
+These are the previous versions of the repository in which changes were
+made to the R Markdown
+(<code>analysis/distance-based-regression-simulation.Rmd</code>) and
+HTML (<code>docs/distance-based-regression-simulation.html</code>)
+files. If you’ve configured a remote Git repository (see
+<code>?wflow_git_remote</code>), click on the hyperlinks in the table
+below to view the files as they were in that past version.
+</p>
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+File
+</th>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+<th>
+Message
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+4d5b751
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-06-30
+</td>
+<td>
+Add distance-based regression method and simulation
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>When exploring the data-based regression method (where we regress the
+gram matrix over the different binary vector matrix options), Matthew
+and I noticed a non-identifiability issue with the results. For example,
+in the four population example where the data has a bifurcating tree
+structure, instead of finding a loading vector that is <span
+class="math inline">\([1 \ 0 \ 0 \ 0]\)</span>, it will instead find a
+loading vector of <span class="math inline">\([0 \ 1 \ 1 \ 1]\)</span>.
+Both vectors distinguish population 1 from the other three populations.
+However, the baseline or the root of the tree is different, leading to
+different representations. Another observation that was made is that we
+need to place enough regularization on the coefficients to get a
+parsimonious representation. I originally did not have enough
+regularization. Another comment is that I should not normalize the
+loadings in the structure plot. That way, we can see if a factor is
+depicting significant sources of variation or if they are just
+overfitting to noise.</p>
+<p>As a result of the first observation, Matthew suggested a new
+variation of this regression method. We are really interested in
+obtaining a representation of the distance matrix which is defined as
+<span class="math display">\[D_{ij} = \sum_{l} (X_{il} -
+X_{jl})^2.\]</span> We can write this in matrix form as <span
+class="math display">\[D = \alpha \bf{1}^{T} + \bf{1} \alpha^{T} -
+2(X^{T}X).\]</span> where <span class="math inline">\(\alpha\)</span> is
+a vector with entries <span class="math inline">\(\alpha_i =
+X_i^{T}X_i\)</span>.</p>
+<p>Mathematically, we want an approximation such that <span
+class="math display">\[D_{ij} \approx \sum_{k} (l_{ki} -
+l_{kj})^2.\]</span> In matrix form, this can be written as <span
+class="math display">\[D \approx \beta \bf{1}^{T} + \bf{1} \beta^{T} -
+2LL^{T}\]</span> Note that if <span class="math inline">\(LL^{T} =
+X^{T}X\)</span>, then working from the definition of <span
+class="math inline">\(D\)</span>, we get the approximation we desire.
+(Also note that <span class="math inline">\(\alpha\)</span> is a
+function of <span class="math inline">\(X^{T}X\)</span> and <span
+class="math inline">\(\beta\)</span> is an analogous function of <span
+class="math inline">\(LL^{T}\)</span>).</p>
+<p>Our previous method involves factoring <span
+class="math inline">\(X^{T}X\)</span>, and potentially requires some
+post-processing of the results due to the non-identifiability of the
+mapping from <span class="math inline">\(X^{T}X\)</span> to <span
+class="math inline">\(D\)</span>. To try to circumvent the
+identifiability issues, we wanted to develop a new factorization method
+that works with <span class="math inline">\(D\)</span> directly.</p>
+<p>More specifically, we will model the following sum: <span
+class="math display">\[D_{ij} \approx \sum_{k} \lambda_k (l_{ki} -
+l_{kj})^2\]</span> which is also referred to as a split decomposition.
+For this regression, we only need to consider the binary vectors with up
+to <span class="math inline">\(n/2\)</span> 1’s (because the other
+binary vectors will map to an already existing summand).</p>
+</div>
+<div id="packages-and-functions-for-analyses" class="section level1">
+<h1>Packages and Functions for analyses</h1>
+<pre class="r"><code>library(ggplot2)
+library(pheatmap)
+library(NNLM)</code></pre>
+<pre class="r"><code>plot_heatmap &lt;- function(L, title = &quot;&quot;){
+  ### define the color map
+  cols &lt;- colorRampPalette(c(&quot;gray96&quot;, &quot;red&quot;))(49)
+  brks &lt;- seq(min(L), max(L), length=50)
+  
+  plt &lt;- pheatmap(L, show_rownames = FALSE, show_colnames = FALSE, cluster_rows = FALSE, cluster_cols = FALSE, color = cols, breaks = brks, main = title)
+  return(plt)
+}</code></pre>
+<pre class="r"><code>structure_plot_general = function(Lhat,Fhat,grouping,title=NULL, loadings_order = &#39;embed&#39;, print_plot=FALSE, seed=12345, n_samples = NULL, gap=40, show_legend=TRUE, K = NULL, plot.colors = NULL, normalize = FALSE){
+  set.seed(seed)
+
+  #if not told to plot all samples, then plot a sub-sample
+  if(is.null(n_samples)&amp;all(loadings_order == &quot;embed&quot;)){
+    n_samples = 2000
+  }
+  
+  if(is.null(plot.colors)){
+    plot.colors &lt;- rainbow(ncol(Lhat))
+  }
+
+  #normalize L such that each factor has a maximum loading value of 1
+  #results in an error if all the entries of a column are 0
+  # this doesn&#39;t do the normalization if all the entries are below 1 (think about!)
+  if (normalize == TRUE){
+    Lhat = apply(Lhat,2,function(z){z/max(max(z),0.00001)})
+  }
+  
+  #if not told to plot all factors, then plot the requested subset
+  if(!is.null(K)){
+    Lhat = Lhat[,1:K]
+    Fhat = Fhat[,1:K]
+  }
+  
+  Fhat = matrix(1,nrow=3,ncol=ncol(Lhat))
+  
+  #add column names to Lhat if it doesn&#39;t have column names
+  if(is.null(colnames(Lhat))){
+    colnames(Lhat) &lt;- paste0(&quot;k&quot;,1:ncol(Lhat))
+  }
+  
+  #define multinom_topic_model_fit for structure plot function
+  fit_list &lt;- list(L = Lhat,F = Fhat)
+  class(fit_list) &lt;- c(&quot;multinom_topic_model_fit&quot;, &quot;list&quot;)
+  
+  #plot
+  p &lt;- fastTopics::structure_plot(fit_list,grouping = grouping, loadings_order = loadings_order, n = n_samples, colors = plot.colors, gap = gap,verbose=F) + labs(y = &quot;loading&quot;,color = &quot;dim&quot;,fill = &quot;dim&quot;) + ggtitle(title)
+  if(!show_legend){
+    p &lt;- p + theme(legend.position=&quot;none&quot;)
+  }
+  if(print_plot){
+    print(p)
+  }
+  return(p)
+}</code></pre>
+<div id="functions-for-the-penalized-regression-method"
+class="section level2">
+<h2>Functions for the penalized regression method</h2>
+<pre class="r"><code>compute_distance &lt;- function(X){
+  #crossprod_X &lt;- X %*% t(X) # assume X is samples by features
+  crossprod_X &lt;- tcrossprod(X)
+  alpha &lt;- diag(crossprod_X) 
+  n &lt;- length(alpha)
+  D &lt;- as.matrix(alpha) %*% t(rep(1, n)) + as.matrix(rep(1,n)) %*% t(alpha) - 2*crossprod_X
+  return(D)
+}</code></pre>
+<pre class="r"><code>compute_vector_distance_matrix &lt;- function(l_k){
+  l_k_distance &lt;- stats::dist(as.matrix(l_k), diag = FALSE) #this only outputs lower triangular part (not including diagonal)
+  return(l_k_distance)
+}</code></pre>
+<pre class="r"><code>#small sample workflow
+distance_matrix_factorization &lt;- function(P = NULL, alpha_l1 = 0, dist_matrix = NULL){
+  if (is.null(dist_matrix) == TRUE){
+    dist_matrix &lt;- compute_distance(P)
+    n = nrow(P) # assume P is samples by features
+    print(n)
+  }
+  else{
+    n &lt;- nrow(dist_matrix)
+  }
+  
+  L_options &lt;- t(expand.grid(replicate(n, 0:1, simplify = FALSE)))
+  num_of_ones &lt;- colSums(L_options)
+  L_options &lt;- L_options[,(num_of_ones &lt;= (n/2))] # replace the zero vector with vector of all ones (I think a vector of all ones is more interpretable than a zero vector)
+  #L_options[,(colSums(L_options) == 0)] &lt;- rep(1,n)
+  
+  #if n/2 is even 
+  idx_halfn &lt;- L_options[,(colSums(L_options) == (n/2))]
+  test_corr &lt;- cor(idx_halfn, idx_halfn)
+  test_complement &lt;- (test_corr == -1)
+  complements &lt;- which(test_complement, arr.ind = TRUE)
+  complements_keep &lt;- complements[c(1:(nrow(complements)/2)), 2] #might need to change this
+  L_options &lt;- cbind(L_options[,(colSums(L_options) &lt; (n/2))], idx_halfn[,complements_keep])
+  
+  L_options[,(colSums(L_options) == 0)] &lt;- rep(1,n)
+  
+  #should I just fit off-diagonals since the diagonals of a distance matrix are zero
+  #should I just fit the lower-triangular part since a distance matrix is symmetric
+  LLt_options &lt;- matrix(rep(0, ncol(L_options)*(0.5*n*(n-1))), ncol = ncol(L_options))
+  for (i in 1:ncol(L_options)){
+    LLt_options[,i] &lt;- c(compute_vector_distance_matrix(L_options[,i])) 
+  }
+
+  D_lower &lt;- lower.tri(dist_matrix, diag = FALSE)
+  D_lower_vec &lt;- c(dist_matrix)[c(D_lower)]
+  nnlm_fit &lt;- nnlm(LLt_options, as.matrix(D_lower_vec, ncol = 1), alpha = c(0,0,alpha_l1))
+  
+  indices_keep &lt;- (nnlm_fit$coefficients &gt; 0)
+  lambda &lt;- nnlm_fit$coefficients[indices_keep]
+  X_keep &lt;- LLt_options[,indices_keep]
+  
+  L_est &lt;- L_options[,indices_keep] %*% diag(sqrt(lambda)) # double check this
+  
+  dist_est_vals &lt;- LLt_options %*% nnlm_fit$coefficients
+  dist_est &lt;- matrix(rep(0, n*n), ncol = n)
+  dist_est[lower.tri(dist_est,diag=FALSE)] &lt;- dist_est_vals
+  dist_est &lt;- as.matrix(Matrix::forceSymmetric(dist_est, uplo=&quot;L&quot;))
+  
+  return(list(nnlm_fit = nnlm_fit, L_est = L_est, dist_est = dist_est))
+}</code></pre>
+</div>
+</div>
+<div id="simulation-on-data-generated-from-model"
+class="section level1">
+<h1>Simulation on data generated from model</h1>
+<div id="data-generation" class="section level2">
+<h2>Data Generation</h2>
+<p>To generate the data, I took a binary <span
+class="math inline">\(L\)</span> matrix, and computed the corresponding
+distance matrices for each column of <span
+class="math inline">\(L\)</span>. Then I took the sum of these matrices
+and added normal noise to generate the data. This data generation
+process is in line with the regression model we fit.</p>
+<pre class="r"><code>generate_data_from_model &lt;- function(noise_sd){
+  LL &lt;- matrix(0, nrow = 4, ncol = 6)
+  LL[, 1] &lt;- 1
+  LL[, 2] &lt;- c(1, 1, 0, 0)
+  #LL[, 3] &lt;- rep(c(0, 0, 1, 1), times = pop_sizes)
+  LL[, 3] &lt;- c(1, 0, 0, 0)
+  LL[, 4] &lt;- c(0, 1, 0, 0)
+  LL[, 5] &lt;- c(0, 0, 1, 0)
+  LL[, 6] &lt;- c(0, 0, 0, 1)
+  
+  distance_matrices_list &lt;- list()
+  for (i in 1:ncol(LL)){
+    distance_matrices_list[[i]] &lt;- compute_vector_distance_matrix(LL[,i])
+  }
+  Y &lt;- c(Reduce(&#39;+&#39;, distance_matrices_list)) + rnorm(length(c(distance_matrices_list[[1]])), mean = 0, sd = noise_sd)
+  return(list(Y = Y, LL = LL))
+}</code></pre>
+<pre class="r"><code>dist_data &lt;- generate_data_from_model(0.1)</code></pre>
+<pre class="r"><code>structure_plot_general(dist_data$LL, 
+                       dist_data$LL, 
+                       n_samples = 4,
+                       plot.colors = c(&#39;#FF3030&#39;, &#39;#1E90FF&#39;, &#39;#B23AEE&#39;, &#39;#FFFF00&#39;, &#39;#FF3E96&#39;, &#39;#00EE00&#39;,
+                                       &#39;#97FFFF&#39;))</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-9-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="using-penalized-regression-to-factorize"
+class="section level2">
+<h2>Using Penalized Regression to Factorize</h2>
+<div id="hypothesis" class="section level3">
+<h3>Hypothesis</h3>
+<p>I hypothesize that the penalized regression method will be able to
+recover the desired structure since the data is generated under the
+assumptions of the model.</p>
+</div>
+<div id="analysis" class="section level3">
+<h3>Analysis</h3>
+<pre class="r"><code>dist_matrix &lt;- matrix(rep(0, 4*4), ncol = 4)
+dist_matrix[lower.tri(dist_matrix,diag=FALSE)] &lt;- dist_data$Y
+dist_matrix &lt;- as.matrix(Matrix::forceSymmetric(dist_matrix,uplo=&quot;L&quot;))</code></pre>
+<pre class="r"><code>plot_heatmap(dist_matrix)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-11-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>set.seed(2042)
+fit.regression &lt;- distance_matrix_factorization(alpha_l1 = 0.05, dist_matrix = dist_matrix)</code></pre>
+<pre><code>Warning in nnlm(LLt_options, as.matrix(D_lower_vec, ncol = 1), alpha = c(0, : x
+does not have a full column rank. Solution may not be unique.</code></pre>
+<pre class="r"><code># dist_est &lt;- compute_distance(fit.regression$L_est)</code></pre>
+<pre class="r"><code>plot_heatmap(fit.regression$dist_est)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is a plot of the fitted values vs. observed values:</p>
+<pre class="r"><code>ggplot(data = NULL, aes(x = c(dist_matrix), y = c(fit.regression$dist_est))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = &#39;red&#39;) + xlab(&#39;Observed Values&#39;) + ylab(&#39;Fitted Values&#39;) </code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is a plot of the residuals:</p>
+<pre class="r"><code>fit.residuals &lt;- c(dist_matrix) - c(fit.regression$dist_est)
+ggplot(data = NULL, aes(x = c(1:length(fit.residuals)), y = fit.residuals)) + geom_point() + geom_hline(yintercept = 0)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_heatmap(dist_matrix - fit.regression$dist_est)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="visualization-of-loadings" class="section level3">
+<h3>Visualization of Loadings</h3>
+<pre class="r"><code>dim(fit.regression$L_est)</code></pre>
+<pre><code>[1] 4 6</code></pre>
+<p>This is a heatmap of the loadings:</p>
+<pre class="r"><code>plot_heatmap(fit.regression$L_est)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_heatmap(t(t(fit.regression$L_est)/apply(fit.regression$L_est,2, max)))</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is a structure plot of the loadings:</p>
+<pre class="r"><code>structure_plot_general(fit.regression$L_est, fit.regression$L_est, 
+                       n_samples = 4,
+                       plot.colors = c(&#39;#FF3030&#39;, &#39;#1E90FF&#39;, &#39;#B23AEE&#39;, &#39;#FFFF00&#39;, &#39;#FF3E96&#39;, &#39;#00EE00&#39;,
+                                       &#39;#97FFFF&#39;, &#39;#FF7F00&#39;, &#39;#FFAEB9&#39;, &#39;#698B22&#39;), normalize = FALSE)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="observations" class="section level3">
+<h3>Observations</h3>
+<p>The regression estimate was able to differentiate populations 1 and 2
+from populations 3 and 4. Something that was surprising to me was it
+kept the other 2-split binary vectors. I am not exactly sure why.</p>
+</div>
+<div id="check-objective-function" class="section level3">
+<h3>Check objective function</h3>
+<p>I wanted to check the objective function value to see if the
+algorithm gets stuck in local optima. The objective function is
+non-convex due to the non-negativity constraint, and so it’s possible
+that the algorithm is getting stuck.</p>
+<pre class="r"><code>regression_obj_function &lt;- function(y,x,beta,lambda){
+  obj_val &lt;- mean((as.matrix(y, ncol = 1) - x%*%as.matrix(beta, ncol = 1))^2) + lambda*sum(abs(beta))
+  return(obj_val)
+}</code></pre>
+<pre class="r"><code># objective function value of estimate
+#fit.regression$nnlm_fit$error[[&#39;MSE&#39;]] + 0.05*sum(abs(fit.regression$nnlm_fit$coefficients))
+
+obj_function_from_fit &lt;- function(fit.regression, alpha_l1){
+  return(fit.regression$nnlm_fit$error[[&#39;MSE&#39;]] + alpha_l1*sum(abs(fit.regression$nnlm_fit$coefficients)))
+}
+
+obj_function_from_fit(fit.regression, 0.05)</code></pre>
+<pre><code>[1] 0.2034</code></pre>
+<pre class="r"><code>#objective function value of true values
+distance_matrices_list &lt;- list()
+for (i in 1:ncol(dist_data$LL)){
+  distance_matrices_list[[i]] &lt;- compute_vector_distance_matrix(dist_data$LL[,i])
+}
+
+vectorized_simple_distances &lt;- NULL
+for (i in 1:length(distance_matrices_list)){
+  vectorized_simple_distances &lt;- cbind(vectorized_simple_distances, c(distance_matrices_list[[i]]))
+}
+
+regression_obj_function(dist_data$Y, vectorized_simple_distances, rep(1, ncol(vectorized_simple_distances)), 0.05)</code></pre>
+<pre><code>[1] 0.3073704</code></pre>
+<p>We see that the objective function value corresponding to the
+estimates is lower than that corresponding to the true values. This
+suggests that the outputted values are “better” estimates with respect
+to this objective function than the true values used to generate the
+data. (Note that I don’t expect the true values to be the best estimates
+since we are working with noisy data. However, we hope that something
+close to the true values is the best estimate.) This does not suggest
+that the algorithm is getting stuck in local optima. Perhaps there are
+identifiability issues with this problem, or this is a hard problem to
+solve.</p>
+</div>
+<div id="testing-different-levels-of-regularization"
+class="section level3">
+<h3>Testing different levels of regularization</h3>
+<p>I also tried different levels of regularization. I found that small
+levels of regularization, e.g. <span class="math inline">\(\alpha =
+10^{-10}\)</span> led to a loadings estimate that looked more similar to
+the true loadings value.</p>
+<pre class="r"><code>set.seed(2042)
+fit.regression_alpha_small &lt;- distance_matrix_factorization(alpha_l1 = 10^(-10), dist_matrix = dist_matrix)</code></pre>
+<pre><code>Warning in nnlm(LLt_options, as.matrix(D_lower_vec, ncol = 1), alpha = c(0, : x
+does not have a full column rank. Solution may not be unique.</code></pre>
+<pre class="r"><code>structure_plot_general(fit.regression_alpha_small$L_est, fit.regression_alpha_small$L_est, 
+                       n_samples = 4,
+                       plot.colors = c(&#39;#FF3030&#39;, &#39;#1E90FF&#39;, &#39;#B23AEE&#39;, &#39;#FFFF00&#39;, &#39;#FF3E96&#39;, &#39;#00EE00&#39;,
+                                       &#39;#97FFFF&#39;, &#39;#FF7F00&#39;, &#39;#FFAEB9&#39;, &#39;#698B22&#39;), normalize = FALSE)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-27-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>There is a vector that differentiates populations 1 and 2 from
+populations 3 and 4. There are also four vectors which differentiate one
+population from the other three populations. And then there are an
+additional two 2-split binary vector. The weights on these vector are
+smaller than the other weights, so it’s possible that these vectors are
+modeling noise.</p>
+<p>This means that when the l1-penalty is increased, the coefficients
+for the 2-split binary vectors are increased and the weights for the
+population-specific vectors are decreased.</p>
+</div>
+</div>
+</div>
+<div id="simulation-on-tree-data" class="section level1">
+<h1>Simulation on tree data</h1>
+<div id="data-generation-1" class="section level2">
+<h2>Data Generation</h2>
+<p>To generate the data, I modified code I found from Jason’s github
+repository. We are modeling four populations that follow a tree
+structure. Therefore, the loadings matrix is binary and has a
+hierarchical structure. The entries of the factor matrix are generated
+using normal random variables. Normal random noise is added to the
+product of the loadings and factor matrix. One thing to note is that the
+signal to noise ratio (and thus the variance of the estimate) is
+partially affected by the number of genes we are simulating. It might be
+interesting to vary the number of genes simulated and see how that
+affects the estimate. (Note that this set up is different from the
+previous – in the previous set up, I was generating data directly from
+the method’s data model. Therefore, I did not generate a factor
+matrix.)</p>
+<pre class="r"><code># modified from Jason&#39;s code
+sim_4pops_noadmix &lt;- function(pop_sizes,
+                      branch_sds,
+                      indiv_sd,
+                      n_genes = 1000,
+                      seed = 666) {
+  set.seed(seed)
+
+  n &lt;- sum(pop_sizes)
+  p &lt;- n_genes
+
+  FF &lt;- matrix(rnorm(7 * p, sd = rep(branch_sds, each = p)), ncol = 7)
+  LL &lt;- matrix(0, nrow = n, ncol = 7)
+  LL[, 1] &lt;- 1
+  LL[, 2] &lt;- rep(c(1, 1, 0, 0), times = pop_sizes)
+  LL[, 3] &lt;- rep(c(0, 0, 1, 1), times = pop_sizes)
+  LL[, 4] &lt;- rep(c(1, 0, 0, 0), times = pop_sizes)
+  LL[, 5] &lt;- rep(c(0, 1, 0, 0), times = pop_sizes)
+  LL[, 6] &lt;- rep(c(0, 0, 1, 0), times = pop_sizes)
+  LL[, 7] &lt;- rep(c(0, 0, 0, 1), times = pop_sizes)
+
+  E &lt;- matrix(rnorm(n * p, sd = indiv_sd), nrow = n)
+
+  pops &lt;- rep(LETTERS[1:length(pop_sizes)], times = pop_sizes)
+
+  return(list(Y = LL %*% t(FF) + E, LL = LL, FF = FF, pops = pops))
+}</code></pre>
+<pre class="r"><code># modified from Jason&#39;s code
+sim_data_4pop_10kgenes &lt;- sim_4pops_noadmix(pop_sizes = c(rep(1, 4)),
+                           branch_sds = rep(1,7),
+                           indiv_sd = 1,
+                           n_genes = 10000)</code></pre>
+<pre class="r"><code>dim(sim_data_4pop_10kgenes$Y)</code></pre>
+<pre><code>[1]     4 10000</code></pre>
+<pre class="r"><code>plot_heatmap(sim_data_4pop_10kgenes$LL)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-31-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_heatmap(sim_data_4pop_10kgenes$Y %*% t(sim_data_4pop_10kgenes$Y)/ ncol(sim_data_4pop_10kgenes$Y))</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>structure_plot_general(sim_data_4pop_10kgenes$LL, 
+                       sim_data_4pop_10kgenes$LL, 
+                       n_samples = 4,
+                       plot.colors = c(&#39;#FF3030&#39;, &#39;#1E90FF&#39;, &#39;#B23AEE&#39;, &#39;#FFFF00&#39;, &#39;#FF3E96&#39;, &#39;#00EE00&#39;,
+                                       &#39;#97FFFF&#39;))</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>We see that all the populations share k1 (the red bar). In addition,
+populations 1 and 2 share k3 (the purple bar) and populations 3 and 4
+share k2 (the dark blue bar). Each individual population also has their
+own unique component that distinguishes them from the other
+populations.</p>
+</div>
+<div id="using-penalized-regression-to-factorize-1"
+class="section level2">
+<h2>Using Penalized Regression to Factorize</h2>
+<div id="hypothesis-1" class="section level3">
+<h3>Hypothesis</h3>
+<p>I hypothesize that the regression should be able to recover the true
+loadings (with a high enough amount of regularization).</p>
+</div>
+<div id="analysis-1" class="section level3">
+<h3>Analysis</h3>
+<pre class="r"><code>dist_matrix2 &lt;- compute_distance(sim_data_4pop_10kgenes$Y)</code></pre>
+<pre class="r"><code>plot_heatmap(dist_matrix2)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-35-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>set.seed(2042)
+fit.regression2 &lt;- distance_matrix_factorization(sim_data_4pop_10kgenes$Y, alpha_l1 = 30)</code></pre>
+<pre><code>[1] 4</code></pre>
+<pre><code>Warning in nnlm(LLt_options, as.matrix(D_lower_vec, ncol = 1), alpha = c(0, : x
+does not have a full column rank. Solution may not be unique.</code></pre>
+<pre class="r"><code>dist_est2 &lt;- fit.regression2$dist_est</code></pre>
+<pre class="r"><code>plot_heatmap(dist_est2)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is a plot of the fitted values vs. observed values:</p>
+<pre class="r"><code>ggplot(data = NULL, aes(x = c(dist_matrix2), y = c(dist_est2))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = &#39;red&#39;) + xlab(&#39;Observed Values&#39;) + ylab(&#39;Fitted Values&#39;) </code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-39-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is a plot of the residuals:</p>
+<pre class="r"><code>fit.residuals2 &lt;- c(dist_matrix2) - c(dist_est2)
+ggplot(data = NULL, aes(x = c(1:length(fit.residuals2)), y = fit.residuals2)) + geom_point() + geom_hline(yintercept = 0)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_heatmap(dist_matrix2 - dist_est2)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-41-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is the MSE:</p>
+<pre class="r"><code>obj_function_from_fit(fit.regression2, 0)</code></pre>
+<pre><code>[1] 112.5</code></pre>
+</div>
+<div id="visualization-of-loadings-1" class="section level3">
+<h3>Visualization of Loadings</h3>
+<pre class="r"><code>dim(fit.regression2$L_est)</code></pre>
+<pre><code>[1] 4 6</code></pre>
+<p>This is a heatmap of the loadings:</p>
+<pre class="r"><code>plot_heatmap(fit.regression2$L_est)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>plot_heatmap(t(t(fit.regression2$L_est)/apply(fit.regression2$L_est,2, max)))</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-45-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>This is a structure plot of the loadings:</p>
+<pre class="r"><code>structure_plot_general(fit.regression2$L_est, fit.regression2$L_est, 
+                       n_samples = 4,
+                       plot.colors = c(&#39;#FF3030&#39;, &#39;#1E90FF&#39;, &#39;#B23AEE&#39;, &#39;#FF3E96&#39;, &#39;#FFFF00&#39;, &#39;#00EE00&#39;,
+                                       &#39;#97FFFF&#39;, &#39;#FF7F00&#39;, &#39;#FFAEB9&#39;, &#39;#698B22&#39;), normalize = FALSE)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-46-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="observations-1" class="section level3">
+<h3>Observations</h3>
+<p>The regression estimate is able to differentiate populations 1 and 2
+from populations 3 and 4, which is good. It also finds some individual
+population effects. However, these effects are relatively small. It’s
+possible that the population-specific effects were clumped into the
+residual variance, so this result is not too surprising to me. A part of
+the estimate that was surprising to me was the inclusion of the other
+2-split binary vectors. I am not exactly sure why it includes these.</p>
+<p>I also tried different regularization levels. One interesting
+observation is that for an l1-penalty weighting of <span
+class="math inline">\(\alpha = 1\)</span>, the loadings estimate looks
+more like the true loadings value.</p>
+<pre class="r"><code>set.seed(2042)
+fit.regression2_alpha1 &lt;- distance_matrix_factorization(sim_data_4pop_10kgenes$Y, alpha_l1 = 1)</code></pre>
+<pre><code>[1] 4</code></pre>
+<pre><code>Warning in nnlm(LLt_options, as.matrix(D_lower_vec, ncol = 1), alpha = c(0, : x
+does not have a full column rank. Solution may not be unique.</code></pre>
+<pre class="r"><code>dim(fit.regression2_alpha1$L_est)</code></pre>
+<pre><code>[1] 4 7</code></pre>
+<pre class="r"><code>structure_plot_general(fit.regression2_alpha1$L_est, fit.regression2_alpha1$L_est, 
+                       n_samples = 4,
+                       plot.colors = c(&#39;#FF3030&#39;, &#39;#1E90FF&#39;, &#39;#B23AEE&#39;, &#39;#FF3E96&#39;, &#39;#FFFF00&#39;, &#39;#00EE00&#39;,
+                                       &#39;#97FFFF&#39;, &#39;#FF7F00&#39;, &#39;#FFAEB9&#39;, &#39;#698B22&#39;), normalize = FALSE)</code></pre>
+<p><img src="figure/distance-based-regression-simulation.Rmd/unnamed-chunk-49-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>obj_function_from_fit(fit.regression2_alpha1, 0)</code></pre>
+<pre><code>[1] 0.05092593</code></pre>
+<p>There is a vector that differentiates populations 1 and 2 from
+populations 3 and 4. There are also four vectors which differentiate one
+population from the other three populations. And then there are two
+other 2-split binary vectors. The weights on these two vectors are
+smaller than the other weights, so it’s possible that these vectors are
+modeling noise.</p>
+<p>If I increase the l1-penalty value enough, the resulting loadings
+estimate changes to put higher weight on the 2-split vectors rather than
+the individual population vectors. Furthermore, when the penalty is
+increased enough to zero out more coefficients, the coefficients on the
+population-specific vectors get zeroed out before the the coefficients
+for the 2-split vectors. Another note is the loadings estimate from the
+<span class="math inline">\(\alpha = 1\)</span> penalty weighting has a
+better fit to the data than the estimate from the <span
+class="math inline">\(\alpha = 30\)</span> penalty weighting. This
+suggests that the choice of l1-penalty weighting is important.</p>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span>
+Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 4.3.2 (2023-10-31)
+Platform: aarch64-apple-darwin20 (64-bit)
+Running under: macOS Sonoma 14.4.1
+
+Matrix products: default
+BLAS:   /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRblas.0.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.3-arm64/Resources/lib/libRlapack.dylib;  LAPACK version 3.11.0
+
+locale:
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
+
+time zone: America/New_York
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+[1] NNLM_0.4.4      pheatmap_1.0.12 ggplot2_3.5.1   workflowr_1.7.1
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.2.1   viridisLite_0.4.2  farver_2.1.2       dplyr_1.1.4       
+ [5] fastmap_1.2.0      lazyeval_0.2.2     promises_1.3.0     digest_0.6.35     
+ [9] lifecycle_1.0.4    survival_3.6-4     processx_3.8.4     invgamma_1.1      
+[13] magrittr_2.0.3     compiler_4.3.2     rlang_1.1.3        sass_0.4.9        
+[17] progress_1.2.3     tools_4.3.2        utf8_1.2.4         yaml_2.3.8        
+[21] data.table_1.15.4  knitr_1.45         labeling_0.4.3     prettyunits_1.2.0 
+[25] htmlwidgets_1.6.4  RColorBrewer_1.1-3 Rtsne_0.17         withr_3.0.0       
+[29] purrr_1.0.2        grid_4.3.2         fansi_1.0.6        git2r_0.33.0      
+[33] fastTopics_0.6-142 colorspace_2.1-0   scales_1.3.0       MASS_7.3-60.0.1   
+[37] mcmc_0.9-8         cli_3.6.2          rmarkdown_2.27     crayon_1.5.2      
+[41] generics_0.1.3     RcppParallel_5.1.7 rstudioapi_0.16.0  httr_1.4.7        
+[45] pbapply_1.7-2      cachem_1.1.0       stringr_1.5.1      splines_4.3.2     
+[49] parallel_4.3.2     vctrs_0.6.5        Matrix_1.6-5       jsonlite_1.8.8    
+[53] SparseM_1.81       callr_3.7.6        MCMCpack_1.7-0     hms_1.1.3         
+[57] mixsqp_0.3-54      ggrepel_0.9.5      irlba_2.3.5.1      plotly_4.10.4     
+[61] jquerylib_0.1.4    tidyr_1.3.1        glue_1.7.0         ps_1.7.6          
+[65] uwot_0.1.16        cowplot_1.1.3      stringi_1.8.4      gtable_0.3.5      
+[69] later_1.3.2        quadprog_1.5-8     munsell_0.5.1      tibble_3.2.1      
+[73] pillar_1.9.0       htmltools_0.5.8.1  quantreg_5.97      truncnorm_1.0-9   
+[77] R6_2.5.1           rprojroot_2.0.4    evaluate_0.23      lattice_0.22-6    
+[81] highr_0.11         SQUAREM_2021.1     ashr_2.2-66        httpuv_1.6.15     
+[85] bslib_0.7.0        MatrixModels_0.5-3 Rcpp_1.0.12        coda_0.19-4.1     
+[89] whisker_0.4.1      xfun_0.44          fs_1.6.4           getPass_0.2-4     
+[93] pkgconfig_2.0.3   </code></pre>
+</div>
+</div>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+https://docs.mathjax.org/en/latest/web/configuration.html. This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
