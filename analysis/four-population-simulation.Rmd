@@ -1,0 +1,343 @@
+---
+title: "four-population-simulation"
+author: "Annie Xie"
+date: "2024-04-28"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+
+In this analysis, I am interested in exploring how well a regression-based factorization can recover tree structure in the data. Therefore, I wanted to run a simulation where the "true" loadings matrix has a tree structure (i.e. the loadings are binary and hierarchical), and see how well the regression-based factorization matches the true values. In this analysis, I simulate four populations from a symmetric tree structure where the branch factors are all of the same magnitude. (I did another simulation where I model six populations from a tree with differing factor magnitudes, but I wanted to try a simpler simulation.) 
+
+# Packages and Functions
+
+```{r}
+library(flashier)
+library(ebnm)
+library(ashr)
+library(ggplot2)
+library(pheatmap)
+library(NNLM)
+```
+
+```{r}
+plot_heatmap <- function(L, title = ""){
+  ### define the color map
+  cols <- colorRampPalette(c("gray96", "red"))(49)
+  brks <- seq(min(L), max(L), length=50)
+  
+  plt <- pheatmap(L, show_rownames = FALSE, show_colnames = FALSE, cluster_rows = FALSE, cluster_cols = FALSE, color = cols, breaks = brks, main = title)
+  return(plt)
+}
+```
+
+```{r}
+structure_plot_general = function(Lhat,Fhat,grouping,title=NULL, loadings_order = 'embed', print_plot=FALSE, seed=12345, n_samples = NULL, gap=40, show_legend=TRUE, K = NULL, plot.colors = NULL, normalize = TRUE){
+  set.seed(seed)
+
+  #if not told to plot all samples, then plot a sub-sample
+  if(is.null(n_samples)&all(loadings_order == "embed")){
+    n_samples = 2000
+  }
+  
+  if(is.null(plot.colors)){
+    plot.colors <- rainbow(ncol(Lhat))
+  }
+
+  #normalize L such that each factor has a maximum loading value of 1
+  #results in an error if all the entries of a column are 0
+  # this doesn't do the normalization if all the entries are below 1 (think about!)
+  if (normalize == TRUE){
+    Lhat = apply(Lhat,2,function(z){z/max(max(z),0.00001)})
+  }
+  
+  #if not told to plot all factors, then plot the requested subset
+  if(!is.null(K)){
+    Lhat = Lhat[,1:K]
+    Fhat = Fhat[,1:K]
+  }
+  
+  Fhat = matrix(1,nrow=3,ncol=ncol(Lhat))
+  
+  #add column names to Lhat if it doesn't have column names
+  if(is.null(colnames(Lhat))){
+    colnames(Lhat) <- paste0("k",1:ncol(Lhat))
+  }
+  
+  #define multinom_topic_model_fit for structure plot function
+  fit_list <- list(L = Lhat,F = Fhat)
+  class(fit_list) <- c("multinom_topic_model_fit", "list")
+  
+  #plot
+  p <- fastTopics::structure_plot(fit_list,grouping = grouping, loadings_order = loadings_order, n = n_samples, colors = plot.colors, gap = gap,verbose=F) + labs(y = "loading",color = "dim",fill = "dim") + ggtitle(title)
+  if(!show_legend){
+    p <- p + theme(legend.position="none")
+  }
+  if(print_plot){
+    print(p)
+  }
+  return(p)
+}
+```
+
+```{r}
+source("~/Documents/PhD 3/Research/EBCD/ebcd_functions.R")
+```
+
+# Data Generation
+
+To generate the data, I modified code I found from Jason's github repository. We are modeling four populations that follow a tree structure. Therefore, the loadings matrix is binary and has a hierarchical structure. The entries of the factor matrix are generated using normal random variables. Normal random noise is added to the product of the loadings and factor matrix. One thing to note is that the signal to noise ratio (and thus the variance of the estimate) is partially affected by the number of genes we are simulating. It might be interesting to vary the number of genes simulated and see how that affects the estimate.
+
+```{r}
+# modified from Jason's code
+sim_4pops_noadmix <- function(pop_sizes,
+                      branch_sds,
+                      indiv_sd,
+                      n_genes = 1000,
+                      seed = 666) {
+  set.seed(seed)
+
+  n <- sum(pop_sizes)
+  p <- n_genes
+
+  FF <- matrix(rnorm(7 * p, sd = rep(branch_sds, each = p)), ncol = 7)
+  LL <- matrix(0, nrow = n, ncol = 7)
+  LL[, 1] <- 1
+  LL[, 2] <- rep(c(1, 1, 0, 0), times = pop_sizes)
+  LL[, 3] <- rep(c(0, 0, 1, 1), times = pop_sizes)
+  LL[, 4] <- rep(c(1, 0, 0, 0), times = pop_sizes)
+  LL[, 5] <- rep(c(0, 1, 0, 0), times = pop_sizes)
+  LL[, 6] <- rep(c(0, 0, 1, 0), times = pop_sizes)
+  LL[, 7] <- rep(c(0, 0, 0, 1), times = pop_sizes)
+
+  E <- matrix(rnorm(n * p, sd = indiv_sd), nrow = n)
+
+  pops <- rep(LETTERS[1:length(pop_sizes)], times = pop_sizes)
+
+  return(list(Y = LL %*% t(FF) + E, LL = LL, FF = FF, pops = pops))
+}
+```
+
+```{r}
+# modified from Jason's code
+sim_data_4pop_10kgenes <- sim_4pops_noadmix(pop_sizes = c(rep(1, 4)),
+                           branch_sds = rep(1,7),
+                           indiv_sd = 1,
+                           n_genes = 10000)
+```
+
+```{r}
+dim(sim_data_4pop_10kgenes$Y)
+```
+
+```{r}
+plot_heatmap(sim_data_4pop_10kgenes$LL)
+```
+
+```{r}
+plot_heatmap(sim_data_4pop_10kgenes$Y %*% t(sim_data_4pop_10kgenes$Y)/ ncol(sim_data_4pop_10kgenes$Y))
+```
+
+```{r}
+structure_plot_general(sim_data_4pop_10kgenes$LL, 
+                       sim_data_4pop_10kgenes$LL, 
+                       n_samples = 4,
+                       plot.colors = c('#FF3030', '#1E90FF', '#B23AEE', '#FFFF00', '#FF3E96', '#00EE00',
+                                       '#97FFFF'))
+```
+
+We see that all the populations share k1 (the red bar). In addition, populations 1 and 2 share k3 (the purple bar) and populations 3 and 4 share k2 (the dark blue bar). Each individual population also has their own unique component that distinguishes them from the other populations.
+
+# Using Penalized Regression to Factorize
+
+Here, we will use penalized-regression to find a factorization of the data matrix. The details can be found in the `small-sample-factorization` file. 
+
+## Hypothesis
+
+I think, theoretically, the penalized-regression method should be able to recover the true loadings matrix. In particular, if the data has a hierarchical structure, the estimate will also have structure that is close to hierarchical. But I'm unsure if the correlation between the vectorized $LL^{T}$ vectors will cause the penalized regression to just pick one covariate out of many correlated covariates. I looked at the correlation between the vectors, and the highest values are about 0.5, which is not very large, but not insignificant either.
+
+## Analysis
+
+```{r}
+#small sample workflow
+small_sample_matrix_factorization <- function(P, alpha_l1 = 0){
+  dat <- t(P) %*% P/ncol(t(P))
+  n = nrow(t(P))
+  
+  L_options <- t(expand.grid(replicate(n, 0:1, simplify = FALSE)))
+
+  LLt_options <- matrix(rep(0, ncol(L_options)*n*n), ncol = ncol(L_options))
+  for (i in 1:ncol(L_options)){
+    LLt_options[,i] <- c(L_options[,i]%*%t(L_options[,i])) #check this
+  }
+
+  nnlm_fit <- nnlm(LLt_options, as.matrix(c(dat), ncol = 1), alpha = c(0,0,alpha_l1))
+  
+  indices_keep <- (nnlm_fit$coefficients > 0)
+  lambda <- nnlm_fit$coefficients[indices_keep]
+  X_keep <- LLt_options[,indices_keep]
+  
+  rank_one_matrices <- lapply(split(X_keep, seq(ncol(X_keep))), function(x){return(matrix(x, ncol = n))})
+  
+  LLt_estimate <- matrix(rep(0, prod(dim(dat))), ncol = ncol(dat))
+  for (i in 1:length(lambda)){
+    LLt_estimate <- LLt_estimate + lambda[i]*rank_one_matrices[[i]]
+  }
+  
+  L_est <- L_options[,indices_keep] %*% diag(sqrt(lambda))
+  return(list(nnlm_fit = nnlm_fit, LLt_estimate = LLt_estimate, L_est = L_est))
+}
+```
+
+```{r}
+set.seed(2042)
+fit.regression <- small_sample_matrix_factorization(t(sim_data_4pop_10kgenes$Y), alpha_l1 = 2)
+``` 
+
+```{r}
+observed.vals <- sim_data_4pop_10kgenes$Y %*% t(sim_data_4pop_10kgenes$Y)/ncol(sim_data_4pop_10kgenes$Y)
+```
+
+```{r}
+sum((observed.vals - fit.regression$LLt_estimate)^2)
+```
+
+This is a plot of the fitted values vs. observed values:
+```{r}
+ggplot(data = NULL, aes(x = c(observed.vals), y = c(fit.regression$LLt_estimate))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = 'red') + xlab('Observed Values') + ylab('Fitted Values') 
+```
+
+This is a plot of the residuals:
+```{r}
+fit.residuals <- c(observed.vals) - c(fit.regression$LLt_estimate)
+ggplot(data = NULL, aes(x = c(1:length(fit.residuals)), y = fit.residuals)) + geom_point() + geom_hline(yintercept = 0)
+```
+
+## Visualization of Loadings
+
+```{r}
+dim(fit.regression$L_est)
+```
+
+This is a heatmap of the loadings:
+```{r}
+plot_heatmap(fit.regression$L_est)
+```
+
+```{r}
+plot_heatmap(t(t(fit.regression$L_est)/apply(fit.regression$L_est,2, max)))
+```
+
+This is a structure plot of the loadings:
+```{r}
+structure_plot_general(fit.regression$L_est, fit.regression$L_est, 
+                       n_samples = 4,
+                       plot.colors = c('#FF3030', '#1E90FF', '#B23AEE', '#FFFF00', '#FF3E96', '#00EE00',
+                                       '#97FFFF', '#FF7F00', '#FFAEB9', '#698B22'), normalize = FALSE)
+```
+
+## Observations
+
+The regression-based factorization was able to separate populations 1 and 2 and populations 3 and 4 from each other. The estimate did miss the common factor among all of the populations. The other factors combine in various combinations, with a unique combination for each of the four populations. One note is that these estimates may miss the population-specific branches since they could be lumped in with population-specific residual noise. Another observation of this estimate is it is not hierarchical, and thus cannot be easily interpreted as a tree.
+
+## Notes from Discussion with Matthew
+I looked at these results with Matthew and, if I remember correctly, the main takeaways were:  
+  
+* We need a high enough penalty level to get a parsimonious and interpretable result. 
+* We should not normalize the loadings when plotting the results. 
+* There may be identifiability issues. 
+
+In this example, there are some loading vectors which place a loading of 1 on three of the sub-populations and 0 on the remaining sub-population. This can also be thought of as placing a loading of 1 on the remaining sub-population and 0 on the other three. Both of these vectors isolate one sub-population from the other three. In the data generation process, there is a sub-population specific branch for each population. Thus, a loadings vector differentiating one sub-population from the other three makes sense.
+
+# Archived: Experiment: Vary penalization level
+
+## Analysis
+
+```{r, eval = FALSE}
+log_alphas <- seq(from = log(0.001), to = log(4), length.out = 150)
+alphas <- exp(log_alphas)
+regression_fits <- list()
+for (i in 1:length(alphas)){
+  alpha_l1 <- alphas[i]
+  regression_fits[[i]] <- small_sample_matrix_factorization(t(sim_data_4pop_10kgenes$Y), alpha_l1 = alpha_l1)
+}
+```
+
+```{r, eval = FALSE}
+alphas[149]
+structure_plot_general(regression_fits[[149]]$L_est, regression_fits[[149]]$L_est, 
+                       n_samples = 4,)
+```
+
+```{r, eval = FALSE}
+alphas[1]
+structure_plot_general(regression_fits[[1]]$L_est, regression_fits[[1]]$L_est, 
+                       n_samples = 4,)
+```
+
+# Archived: Experiment: Vary number of genes
+
+## Code for simulation workflow
+
+```{r, eval = FALSE}
+simulation_workflow <- function(ngenes){
+  set.seed(ngenes)
+  dat <- sim_4pops_noadmix(rep(1,4), rep(1,7), 1, n_genes = ngenes)
+  fit.regression <- small_sample_matrix_factorization(t(dat$Y), alpha_l1 = 1.5)
+  return(fit.regression)
+}
+```
+
+## Hypothesis
+
+I am varying the number of genes to see how they affect the estimate. As the number of genes increases, the variance of the estimate should decrease (and hopefully be concentrated around something that looks like the true value). Therefore, I suspect that as the number of genes increases, then the estimate should look more like the true loadings matrix. 
+
+## Analysis
+
+```{r, eval = FALSE}
+ngene_options <- c(1000, 5000, 10000, 15000, 20000, 25000, 100000)
+varying_ngenes_fits <- list()
+for (i in 1:length(ngene_options)){
+  varying_ngenes_fits[[i]] <- simulation_workflow(ngene_options[i])
+}
+```
+
+```{r, eval = FALSE}
+ngene_options[1]
+structure_plot_general(varying_ngenes_fits[[1]]$L_est, varying_ngenes_fits[[1]]$L_est, 
+                       n_samples = 4,)
+```
+
+```{r, eval = FALSE}
+ngene_options[7]
+structure_plot_general(varying_ngenes_fits[[7]]$L_est, varying_ngenes_fits[[7]]$L_est, 
+                       n_samples = 4,)
+```
+
+# Archived: Experiment: Vary standard deviation of the normal noise
+
+```{r, eval = FALSE}
+simulation_workflow_sd <- function(sd, seed = 1094){
+  set.seed(seed)
+  dat <- sim_4pops_noadmix(rep(1,4), rep(1,7), 1, indiv_sd = sd, n_genes = 1000)
+  fit.regression <- small_sample_matrix_factorization(t(dat$Y), alpha_l1 = 1)
+  return(fit.regression)
+}
+```
+
+## Analysis
+
+```{r, eval = FALSE}
+sd_options <- c(0.001, 0.01, 0.05, 0.1, 0.5, 0.75, 1)
+varying_indiv_sd_fits <- list()
+for (i in 1:length(sd_options)){
+  varying_indiv_sd_fits[[i]] <- simulation_workflow_sd(sd_options[i])
+}
+```
+
+```{r, eval = FALSE}
+sd_options[2]
+structure_plot_general(varying_indiv_sd_fits[[7]]$L_est, varying_indiv_sd_fits[[7]]$L_est, n_samples = 4,)
+```
