@@ -1,7 +1,7 @@
-name: "drift_matrix_factorization"
+name: drift_matrix_factorization
 output_dir: ../docs
 navbar:
-  title: "drift_matrix_factorization"
+  title: drift_matrix_factorization
   left:
   - text: Home
     href: index.html
@@ -9,6 +9,10 @@ navbar:
     href: about.html
   - text: License
     href: license.html
+  right:
+  - icon: fab fa-github
+    text: Source code
+    href: https://github.com/xxie6/drift_matrix_factorization
 output:
   workflowr::wflow_html:
     toc: yes
