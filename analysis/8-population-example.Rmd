@@ -1,0 +1,798 @@
+---
+title: "8-population-example"
+author: "Annie Xie"
+date: "2024-07-29"
+output: workflowr::wflow_html
+editor_options:
+  chunk_output_type: console
+---
+
+# Introduction
+
+In our previous analysis, we tested our distance-based regression method on 4 population data generated from a balanced tree. We wanted the method to recover a drift factorization. However, we found that the method was finding a different factorization. After further investigation, Matthew found an example where a different factorization provided a perfect fit (in the case of no noise) but its coefficients had a smaller L1 norm than the coefficients associated with the drift factorization. After finding this example, Matthew commented that we not only want our coefficients to be sparse, but we also want the chosen loadings vectors to also be sparse. In EBMF, this preference is directly encoded by placing a sparse prior on the loadings. However, it is unclear how to encode this preference in the regression setting. Matthew suggested trying to normalize the loadings vectors such that they have l1-norm equal to 1. This method is a little ad-hoc, but it seems like it should be able to capture the preference for sparse loadings vectors. Vectors that are not sparse will need higher coefficients due to the normalization of the vectors.
+
+In this analysis, we want to test out this new method. We first test it out on the 4 population example. (Here, we consider no noise.) Then we will test out the method on a 8 population example where the data is generated from a balanced tree.
+
+# Packages and function for analyses
+```{r}
+library(ggplot2)
+library(pheatmap)
+library(NNLM)
+```
+
+```{r}
+plot_heatmap <- function(L, title = ""){
+  ### define the color map
+  cols <- colorRampPalette(c("gray96", "red"))(49)
+  brks <- seq(min(L), max(L), length=50)
+  
+  plt <- pheatmap(L, show_rownames = FALSE, show_colnames = FALSE, cluster_rows = FALSE, cluster_cols = FALSE, color = cols, breaks = brks, main = title)
+  return(plt)
+}
+```
+
+```{r}
+structure_plot_general = function(Lhat,Fhat,grouping,title=NULL, loadings_order = 'embed', print_plot=FALSE, seed=12345, n_samples = NULL, gap=40, show_legend=TRUE, K = NULL, plot.colors = NULL, normalize = FALSE){
+  set.seed(seed)
+
+  #if not told to plot all samples, then plot a sub-sample
+  if(is.null(n_samples)&all(loadings_order == "embed")){
+    n_samples = 2000
+  }
+  
+  if(is.null(plot.colors)){
+    plot.colors <- rainbow(ncol(Lhat))
+  }
+
+  #normalize L such that each factor has a maximum loading value of 1
+  #results in an error if all the entries of a column are 0
+  # this doesn't do the normalization if all the entries are below 1 (think about!)
+  if (normalize == TRUE){
+    Lhat = apply(Lhat,2,function(z){z/max(max(z),0.00001)})
+  }
+  
+  #if not told to plot all factors, then plot the requested subset
+  if(!is.null(K)){
+    Lhat = Lhat[,1:K]
+    Fhat = Fhat[,1:K]
+  }
+  
+  Fhat = matrix(1,nrow=3,ncol=ncol(Lhat))
+  
+  #add column names to Lhat if it doesn't have column names
+  if(is.null(colnames(Lhat))){
+    colnames(Lhat) <- paste0("k",1:ncol(Lhat))
+  }
+  
+  #define multinom_topic_model_fit for structure plot function
+  fit_list <- list(L = Lhat,F = Fhat)
+  class(fit_list) <- c("multinom_topic_model_fit", "list")
+  
+  #plot
+  p <- fastTopics::structure_plot(fit_list,grouping = grouping, loadings_order = loadings_order, n = n_samples, colors = plot.colors, gap = gap,verbose=F) + labs(y = "loading",color = "dim",fill = "dim") + ggtitle(title)
+  if(!show_legend){
+    p <- p + theme(legend.position="none")
+  }
+  if(print_plot){
+    print(p)
+  }
+  return(p)
+}
+```
+
+```{r}
+regression_obj_function <- function(y,x,beta,lambda){
+  obj_val <- mean((as.matrix(y, ncol = 1) - x%*%as.matrix(beta, ncol = 1))^2) + lambda*sum(abs(beta))
+  return(obj_val)
+}
+```
+
+```{r}
+obj_function_from_fit <- function(fit.regression, alpha_l1){
+  return(fit.regression$nnlm_fit$error[['MSE']] + alpha_l1*sum(abs(fit.regression$nnlm_fit$coefficients)))
+}
+```
+
+## Functions for the penalized regression
+
+```{r}
+compute_distance <- function(X = NULL, crossprod_X = NULL){
+  #crossprod_X <- X %*% t(X) # assume X is samples by features
+  if (is.null(crossprod_X) == TRUE){
+    crossprod_X <- tcrossprod(X)
+  }
+  alpha <- diag(crossprod_X) 
+  n <- length(alpha)
+  D <- as.matrix(alpha) %*% t(rep(1, n)) + as.matrix(rep(1,n)) %*% t(alpha) - 2*crossprod_X
+  return(D)
+}
+```
+
+```{r}
+compute_vector_distance_matrix <- function(l_k){
+  l_k_distance <- stats::dist(as.matrix(l_k), diag = FALSE) #this only outputs lower triangular part (not including diagonal)
+  return(l_k_distance)
+}
+```
+
+```{r}
+#small sample workflow
+distance_matrix_factorization_standardized <- function(P = NULL, alpha_l1 = 0, dist_matrix = NULL, no_singleton = FALSE){
+  if (is.null(dist_matrix) == TRUE){
+    dist_matrix <- compute_distance(P)
+    n = nrow(P) # assume P is samples by features
+    print(n)
+  }
+  else{
+    n <- nrow(dist_matrix)
+  }
+  
+  # get the options for the binary loadings vectors
+  L_options <- t(expand.grid(replicate(n, 0:1, simplify = FALSE)))
+  num_of_ones <- colSums(L_options)
+  L_options <- L_options[,(num_of_ones <= (n/2))] 
+  
+  #if n/2 is even 
+  idx_halfn <- L_options[,(colSums(L_options) == (n/2))]
+  test_corr <- cor(idx_halfn, idx_halfn)
+  
+  mytol <- 1e-10
+  test_complement <- (abs(test_corr - (-1)) < mytol)
+  complements <- which(test_complement, arr.ind = TRUE)
+  complements_keep <- complements[c(1:(nrow(complements)/2)), 2] #might need to change this
+  L_options <- cbind(L_options[,(colSums(L_options) < (n/2))], idx_halfn[,complements_keep])
+  
+  # drop vector that is all zeros (the distance will be zero so it doesn't contribute in   the regression model)
+  L_options <- L_options[, !(colSums(L_options) == 0)]
+  
+  if (no_singleton == TRUE){
+    L_options <- L_options[, (colSums(L_options) != 1)]
+  }
+  
+  # standardize the l vectors in the L_options matrix
+  L_options <- t(t(L_options)/colSums(L_options))
+  
+  # Fit the regression
+  # I just fit off-diagonals since the diagonals of a distance matrix are zero
+  # I just fit the lower-triangular part since a distance matrix is symmetric
+  LLt_options <- matrix(rep(0, ncol(L_options)*(0.5*n*(n-1))), ncol = ncol(L_options))
+  for (i in 1:ncol(L_options)){
+    LLt_options[,i] <- c(compute_vector_distance_matrix(L_options[,i])) 
+  }
+
+  D_lower <- lower.tri(dist_matrix, diag = FALSE)
+  D_lower_vec <- c(dist_matrix)[c(D_lower)]
+  nnlm_fit <- nnlm(LLt_options^2, as.matrix(D_lower_vec, ncol = 1), alpha = c(0,0,alpha_l1))
+  
+  indices_keep <- (nnlm_fit$coefficients > 0)
+  lambda <- nnlm_fit$coefficients[indices_keep]
+  X_keep <- LLt_options[,indices_keep]
+  
+  L_est <- L_options[,indices_keep] %*% diag(sqrt(lambda))
+  
+  dist_est_vals <- LLt_options %*% nnlm_fit$coefficients
+  dist_est <- matrix(rep(0, n*n), ncol = n)
+  dist_est[lower.tri(dist_est,diag=FALSE)] <- dist_est_vals
+  dist_est <- as.matrix(Matrix::forceSymmetric(dist_est, uplo="L"))
+  
+  return(list(nnlm_fit = nnlm_fit, lambda = lambda, L_unscaled = L_options[,indices_keep], L_est = L_est, dist_est = dist_est))
+}
+```
+
+```{r}
+#small sample workflow
+distance_matrix_factorization <- function(P = NULL, alpha_l1 = 0, dist_matrix = NULL){
+  if (is.null(dist_matrix) == TRUE){
+    dist_matrix <- compute_distance(P)
+    n = nrow(P) # assume P is samples by features
+    print(n)
+  }
+  else{
+    n <- nrow(dist_matrix)
+  }
+  
+  L_options <- t(expand.grid(replicate(n, 0:1, simplify = FALSE)))
+  num_of_ones <- colSums(L_options)
+  L_options <- L_options[,(num_of_ones <= (n/2))]
+  
+  #if n/2 is even 
+  idx_halfn <- L_options[,(colSums(L_options) == (n/2))]
+  test_corr <- cor(idx_halfn, idx_halfn)
+  mytol <- 1e-10
+  test_complement <- (abs(test_corr - (-1)) < mytol)
+  complements <- which(test_complement, arr.ind = TRUE)
+  complements_keep <- complements[c(1:(nrow(complements)/2)), 2] #might need to change this
+  L_options <- cbind(L_options[,(colSums(L_options) < (n/2))], idx_halfn[,complements_keep])
+  
+  L_options <- L_options[,(colSums(L_options) != 0)]
+  
+  #I just fit off-diagonals since the diagonals of a distance matrix are zero
+  #I just fit the lower-triangular part since a distance matrix is symmetric
+  LLt_options <- matrix(rep(0, (ncol(L_options)*(0.5*n*(n-1)))), ncol = ncol(L_options))
+  for (i in 1:ncol(L_options)){
+    LLt_options[,i] <- c(compute_vector_distance_matrix(L_options[,i])) 
+  }
+
+  D_lower <- lower.tri(dist_matrix, diag = FALSE)
+  D_lower_vec <- c(dist_matrix)[c(D_lower)]
+  nnlm_fit <- nnlm(LLt_options, as.matrix(D_lower_vec, ncol = 1), alpha = c(0,0,alpha_l1))
+  
+  indices_keep <- (nnlm_fit$coefficients > 0)
+  lambda <- nnlm_fit$coefficients[indices_keep]
+  X_keep <- LLt_options[,indices_keep]
+  
+  L_est <- L_options[,indices_keep] %*% diag(sqrt(lambda)) # double check this
+  
+  dist_est_vals <- LLt_options %*% nnlm_fit$coefficients
+  dist_est <- matrix(rep(0, n*n), ncol = n)
+  dist_est[lower.tri(dist_est,diag=FALSE)] <- dist_est_vals
+  dist_est <- as.matrix(Matrix::forceSymmetric(dist_est, uplo="L"))
+  
+  return(list(nnlm_fit = nnlm_fit, L_est = L_est, dist_est = dist_est))
+}
+```
+
+# 4 Population Example (with no noise)
+
+In this example, we will test this method on 4 population data generated from a balanced tree with no noise.
+
+## Data Generation
+
+```{r}
+# modified from Jason's code
+sim_4pops_no_noise <- function(
+                      seed = 666) {
+  set.seed(seed)
+
+  n <- 4
+
+  LL <- matrix(0, nrow = n, ncol = 7)
+  LL[, 1] <- 1
+  LL[, 2] <- c(1, 1, 0, 0)
+  LL[, 3] <- c(0, 0, 1, 1)
+  LL[, c(4:7)] <- diag(rep(1,n))
+
+  LLt <- tcrossprod(LL)
+  D2 <- compute_distance(crossprod_X = LLt)
+  
+  return(list(D2 = D2, LL = LL))
+}
+```
+
+```{r}
+dist_data_4pop <- sim_4pops_no_noise()
+```
+
+```{r}
+dist_data_4pop$D2
+```
+
+## The split metric we want
+
+This is the split metric that we want the method to recover:
+```{r}
+l1 <- stats::dist((1/2)*c(1, 1, 0, 0), diag = TRUE, upper = TRUE)
+l2 <- stats::dist(c(1, 0, 0, 0), diag = TRUE, upper = TRUE)
+l3 <- stats::dist(c(0, 1, 0, 0), diag = TRUE, upper = TRUE)
+l4 <- stats::dist(c(0, 0, 1, 0), diag = TRUE, upper = TRUE)
+l5 <- stats::dist(c(0, 0, 0, 1), diag = TRUE, upper = TRUE)
+```
+
+```{r}
+8*l1^2 + l2^2 + l3^2 + l4^2 + l5^2
+```
+
+The coefficients have l1 norm = 12.
+
+## Using Penalized Regression to factorize 
+
+### Hypothesis
+Based off of the example that Matthew presented, I hypothesize that the new distance-based regression method (using standardized loadings vectors) will recover the drift factorization.
+
+### Analysis
+
+This is a heatmap of the distance matrix:
+```{r}
+plot_heatmap(dist_data_4pop$D2)
+```
+
+```{r}
+set.seed(2042)
+fit.regression_4pop <- distance_matrix_factorization_standardized(dist_matrix = dist_data_4pop$D2, alpha_l1 = 10^(-10))
+``` 
+
+```{r}
+dist_est_4pop <- fit.regression_4pop$dist_est
+```
+
+This is a heatmap of the estimated distance matrix:
+```{r}
+plot_heatmap(dist_est_4pop)
+```
+
+This is a plot of the fitted values vs. observed values:
+```{r}
+ggplot(data = NULL, aes(x = c(dist_data_4pop$D2), y = c(dist_est_4pop))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = 'red') + xlab('Observed Values') + ylab('Fitted Values')
+```
+
+This is a plot of the residuals:
+```{r}
+fit.residuals_4pop <- c(dist_data_4pop$D2) - c(dist_est_4pop)
+ggplot(data = NULL, aes(x = c(1:length(fit.residuals_4pop)), y = fit.residuals_4pop)) + geom_point() + geom_hline(yintercept = 0)
+```
+
+This is a heatmap of the residuals:
+```{r}
+plot_heatmap(dist_est_4pop - dist_data_4pop$D2)
+```
+
+This is the MSE:
+```{r}
+obj_function_from_fit(fit.regression_4pop, 0)
+```
+
+This is the objective function value:
+```{r}
+obj_function_from_fit(fit.regression_4pop, 0.001)
+```
+
+### Visualization of Loadings
+
+```{r}
+dim(fit.regression_4pop$L_est)
+```
+
+This is a heatmap of the loadings:
+```{r}
+plot_heatmap(fit.regression_4pop$L_est)
+```
+
+This is a heatmap of the standardized loadings:
+```{r}
+plot_heatmap(t(t(fit.regression_4pop$L_est)/apply(fit.regression_4pop$L_est,2, max)))
+```
+
+This is a structure plot of the loadings:
+```{r}
+structure_plot_general(fit.regression_4pop$L_est, fit.regression_4pop$L_est, 
+                       n_samples = 4,
+                       plot.colors = rainbow(5), normalize = FALSE)
+```
+
+This is a structure plot of the squared loadings:
+```{r}
+structure_plot_general(fit.regression_4pop$L_est^2, fit.regression_4pop$L_est^2, 
+                       n_samples = 4,
+                       plot.colors = rainbow(5), normalize = FALSE)
+```
+
+### Observations
+
+The regression method was able to find the desired drift factorization. Four factors correspond to population-specific effects. The fifth factor corresponds to a shared effect for two of the populations, differentiating these two populations from the other two.
+
+I also wanted to note that I tested different weights for the penalty term. I tried some very small weights, and the regression still returns 5 factors. These 5 factors still capture the same sources of variation. 
+
+# 8 Population Example (with no noise)
+
+In this example, we will test this method on 8 population data generated from a balanced tree. 
+
+## Data Generation
+
+```{r}
+# modified from Jason's code
+sim_8pops_no_noise <- function(
+                      seed = 666) {
+  set.seed(seed)
+
+  n <- 8
+
+  LL <- matrix(0, nrow = n, ncol = 15)
+  LL[, 1] <- 1
+  LL[, 2] <- c(1, 1, 1, 1, 0, 0, 0, 0)
+  LL[, 3] <- c(0, 0, 0, 0, 1, 1, 1, 1)
+  LL[, 4] <- c(1, 1, 0, 0, 0, 0, 0, 0)
+  LL[, 5] <- c(0, 0, 1, 1, 0, 0, 0, 0)
+  LL[, 6] <- c(0, 0, 0, 0, 1, 1, 0, 0)
+  LL[, 7] <- c(0, 0, 0, 0, 0, 0, 1, 1)
+  LL[, c(8:15)] <- diag(rep(1, 8))
+
+  LLt <- tcrossprod(LL)
+  D2 <- compute_distance(crossprod_X = LLt)
+  
+  return(list(D2 = D2, LL = LL))
+}
+```
+
+```{r}
+dist_data_8pop <- sim_8pops_no_noise()
+```
+
+```{r}
+dist_data_8pop$D2
+```
+
+## The split metric we want
+
+This is the split metric we want.
+```{r}
+l1 <- stats::dist((1/4)*c(1, 1, 1, 1, 0, 0, 0, 0), diag = TRUE, upper = TRUE)
+l2 <- stats::dist((1/2)*c(1, 1, 0, 0, 0, 0, 0, 0), diag = TRUE, upper = TRUE)
+l3 <- stats::dist((1/2)*c(0, 0, 1, 1, 0, 0, 0, 0), diag = TRUE, upper = TRUE)
+l4 <- stats::dist((1/2)*c(0, 0, 0, 0, 1, 1, 0, 0), diag = TRUE, upper = TRUE)
+l5 <- stats::dist((1/2)*c(0, 0, 0, 0, 0, 0, 1, 1), diag = TRUE, upper = TRUE)
+l6 <- stats::dist(c(1, 0, 0, 0, 0, 0, 0, 0), diag = TRUE, upper = TRUE)
+l7 <- stats::dist(c(0, 1, 0, 0, 0, 0, 0, 0), diag = TRUE, upper = TRUE)
+l8 <- stats::dist(c(0, 0, 1, 0, 0, 0, 0, 0), diag = TRUE, upper = TRUE)
+l9 <- stats::dist(c(0, 0, 0, 1, 0, 0, 0, 0), diag = TRUE, upper = TRUE)
+l10 <- stats::dist(c(0, 0, 0, 0, 1, 0, 0, 0), diag = TRUE, upper = TRUE)
+l11 <- stats::dist(c(0, 0, 0, 0, 0, 1, 0, 0), diag = TRUE, upper = TRUE)
+l12 <- stats::dist(c(0, 0, 0, 0, 0, 0, 1, 0), diag = TRUE, upper = TRUE)
+l13 <- stats::dist(c(0, 0, 0, 0, 0, 0, 0, 1), diag = TRUE, upper = TRUE)
+```
+
+```{r}
+#l1 norm is 32+16+8 = 56
+32*l1^2 + 4*l2^2 + 4*l3^2 + 4*l4^2 + 4*l5^2 + l6^2 + l7^2 + l8^2 + l9^2 + l10^2 + l11^2 + l12^2 + l13^2
+```
+
+The coefficients of this decomposition have l1 norm = 56.
+
+## Using Penalized Regression with Standardization to Factorize
+
+### Hypothesis
+
+Based off of the 4 population example, I hypothesize that this method will also work for the 8 population data generated from the balanced tree. More specifically, I hypothesize that the regression method will recover the drift factorization.
+
+### Analysis
+
+This is a heatmap of the distance matrix:
+```{r}
+plot_heatmap(dist_data_8pop$D2)
+```
+
+```{r}
+set.seed(2042)
+fit.regression_8pop <- distance_matrix_factorization_standardized(dist_matrix = dist_data_8pop$D2, alpha_l1 = 1)
+``` 
+
+```{r}
+dist_est_8pop <- fit.regression_8pop$dist_est
+```
+
+This is a heatmap of the estimated distance matrix:
+```{r}
+plot_heatmap(dist_est_8pop)
+```
+
+This is a plot of the fitted values vs. observed values:
+```{r}
+ggplot(data = NULL, aes(x = c(dist_data_8pop$D2), y = c(dist_est_8pop))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = 'red') + xlab('Observed Values') + ylab('Fitted Values')
+```
+
+This is a plot of the residuals:
+```{r}
+fit.residuals_8pop <- c(dist_est_8pop) - c(dist_data_8pop$D2)
+ggplot(data = NULL, aes(x = c(1:length(fit.residuals_8pop)), y = fit.residuals_8pop)) + geom_point() + geom_hline(yintercept = 0)
+```
+
+This is a heatmap of the residuals:
+```{r}
+plot_heatmap(dist_est_8pop - dist_data_8pop$D2)
+```
+
+This is the MSE:
+```{r}
+obj_function_from_fit(fit.regression_8pop, 0)
+```
+
+This is the objective function value:
+```{r}
+obj_function_from_fit(fit.regression_8pop, 1)
+```
+
+### Visualization of Loadings
+
+```{r}
+dim(fit.regression_8pop$L_est)
+```
+
+This is a heatmap of the loadings:
+```{r}
+plot_heatmap(fit.regression_8pop$L_est)
+```
+
+This is a heatmap of the standardized loadings:
+```{r}
+plot_heatmap(t(t(fit.regression_8pop$L_est)/apply(fit.regression_8pop$L_est,2, max)))
+```
+
+This is a structure plot of the loadings:
+```{r}
+structure_plot_general(fit.regression_8pop$L_est, fit.regression_8pop$L_est, 
+                       n_samples = 8,
+                       plot.colors = c('red','blue','green','yellow','orange','pink','purple','brown4','gray','skyblue','darkgreen','magenta','darkseagreen1', 'darkslategray', 'gold','navy'),
+                       normalize = FALSE)
+```
+
+This is a structure plot of the squared loadings:
+```{r}
+structure_plot_general(fit.regression_8pop$L_est^2, fit.regression_8pop$L_est^2, 
+                       n_samples = 8,
+                       plot.colors = c('red','blue','green','yellow','orange','pink','purple','brown4','gray','skyblue','darkgreen','magenta','darkseagreen1', 'darkslategray', 'gold','navy'),
+                       normalize = FALSE)
+```
+
+### Observations
+
+For the penalty weight = 1, the regression method with standardization returns 16 factors. 4 of these factors have small coefficient values and thus could potentially be fitting noise. Of the other 12 factors, 8 of them correspond to population specific effects. The other four factors correspond to the 2 vs 2 splits that occur for the nodes containing 4 populations each. These 12 factors are part of the drift factorization we were hoping to find. One factor from the drift factorization that is not recovered is the 4 vs 4 split.
+
+The regression method with standardization does seem to choose sparser loadings vectors. I wonder if the method doesn't find the 4 vs 4 split because it is not a sparser vector. The inclusion of the 4 vs 4 split improves the fit, but it also increases the l1 norm of the coefficients by a decent amount. 
+
+## Using Penalized Regression (without singleton factors) to factorize
+
+I wanted to also test the regression method without the singleton factors. In theory, the single population effects can be lumped in with noise. Therefore, I wanted to see if not including singleton factors changes the recovered factorization.
+
+### Hypothesis
+
+I hypothesize that the method will recover the desired 2 vs 6 factors -- these factors were found even when singleton factors were considered. I hope that the method will recover the desired 4 vs 4 factor now that we are not considering the singleton factors. However, I'm not sure if this will be the case.
+
+### Analysis
+
+```{r}
+set.seed(2042)
+fit.regression_8pop_nosingle <- distance_matrix_factorization_standardized(dist_matrix = dist_data_8pop$D2, alpha_l1 = 1, no_singleton = TRUE)
+``` 
+
+This is the MSE:
+```{r}
+obj_function_from_fit(fit.regression_8pop_nosingle, 0)
+```
+
+This is the objective function value:
+```{r}
+obj_function_from_fit(fit.regression_8pop_nosingle, 1)
+```
+
+```{r}
+dim(fit.regression_8pop_nosingle$L_est)
+```
+
+This is a heatmap of the loadings:
+```{r}
+plot_heatmap(fit.regression_8pop_nosingle$L_est)
+```
+
+This is a heatmap of the standardized loadings:
+```{r}
+plot_heatmap(t(t(fit.regression_8pop_nosingle$L_est)/apply(fit.regression_8pop_nosingle$L_est,2, max)))
+```
+
+This is a structure plot of the loadings:
+```{r}
+structure_plot_general(fit.regression_8pop_nosingle$L_est, fit.regression_8pop_nosingle$L_est, 
+                       n_samples = 8,
+                       plot.colors = c('red','blue','green','yellow','orange','pink','purple','brown4','gray','skyblue','darkgreen','magenta','darkseagreen1', 'darkslategray', 'gold','navy'),
+                       normalize = FALSE)
+```
+
+This is a structure plot of the squared loadings:
+```{r}
+structure_plot_general(fit.regression_8pop_nosingle$L_est^2, fit.regression_8pop_nosingle$L_est^2, 
+                       n_samples = 8,
+                       plot.colors = c('red','blue','green','yellow','orange','pink','purple','brown4','gray','skyblue','darkgreen','magenta','darkseagreen1', 'darkslategray', 'gold','navy'),
+                       normalize = FALSE)
+```
+
+### Observations
+
+The method was able to recover the desired 2 vs 6 factors. However, it did not recover the desired 4 vs 4 factor. Instead, it seems like the method used other 2 vs 6 factors to model the single population effects.
+
+Here is a small example of this phenomenon in the 4 population case:
+
+The split metric we want:
+```{r}
+h1 <- stats::dist((1/2)*c(1, 1, 0, 0), diag = TRUE, upper = TRUE)
+h2 <- stats::dist(c(1, 0, 0, 0), diag = TRUE, upper = TRUE)
+h3 <- stats::dist(c(0, 1, 0, 0), diag = TRUE, upper = TRUE)
+h4 <- stats::dist(c(0, 0, 1, 0), diag = TRUE, upper = TRUE)
+h5 <- stats::dist(c(0, 0, 0, 1), diag = TRUE, upper = TRUE)
+```
+
+```{r}
+8*h1^2 + h2^2 + h3^2 + h4^2 + h5^2
+```
+
+An alternative split metric:
+```{r}
+b1 <- stats::dist((1/2)*c(1,0,1,0), diag = TRUE, upper = TRUE)
+b2 <- stats::dist((1/2)*c(0,1,1,0), diag = TRUE, upper = TRUE)
+b3 <- stats::dist((1/2)*c(1,0,0,1), diag = TRUE, upper = TRUE)
+b4 <- stats::dist((1/2)*c(0,1,0,1), diag = TRUE, upper = TRUE)
+```
+
+```{r}
+12*h1^2 + (2)*(b1^2 + b2^2 + b3^2 + b4^2)
+```
+
+
+## Using Penalized Regression (without Standardization) to factorize
+
+For comparison, I wanted to apply the original regression method (without standardization) to the 8 population data and see what split metric decomposition it found. Based off of previous experience, I don't expect this method to find the drift factorization. A few reasons why are 1) we do not encode a preference for sparser loadings vectors and 2) there likely is another decomposition whose coefficients have smaller l1 norm than those of the drift factorization.
+
+### Analysis
+
+```{r}
+set.seed(2042)
+fit.regression <- distance_matrix_factorization(alpha_l1 = 32, dist_matrix = dist_data_8pop$D2)
+``` 
+
+This is the MSE:
+```{r}
+obj_function_from_fit(fit.regression, 0)
+```
+
+This is the objective function value:
+```{r}
+obj_function_from_fit(fit.regression, 32)
+```
+
+```{r}
+dim(fit.regression$L_est)
+```
+
+This is a heatmap of the loadings:
+```{r}
+plot_heatmap(fit.regression$L_est)
+```
+
+This is a heatmap of the standardized loadings:
+```{r}
+plot_heatmap(t(t(fit.regression$L_est)/apply(fit.regression$L_est,2, max)))
+```
+
+```{r}
+structure_plot_general(fit.regression$L_est^2, fit.regression$L_est^2, 
+                       n_samples = 8,
+                       plot.colors = c('red','blue','green','yellow','orange','pink','purple','brown4','gray','skyblue','darkgreen','magenta','darkseagreen1', 'darkslategray', 'gold','navy'),
+                       normalize = FALSE)
+```
+
+### Observations
+As I hypothesized, the original regression method did not recover the drift factorization. For the penalty weight = 32, the method returned 15 factors. However, most of the factors have a very small coefficient and possibly are just fitting noise. There are three main factors that don't have small coefficients. One of the factors corresponds to the first split of the tree, differentiating the first four populations from the latter four. The other two factors are also 4 vs. 4 splits. However, the splits do not align with the branches of the tree used to generate the data. This is similar to what we saw in the 4 population example.
+
+# 8 Population Example (with noise)
+
+In this example, I generate a population $\times$ genes data set, $Y$, with random normal noise. Then I compute the distance matrix using the Gram matrix, $YY^{T}$. I was mainly curious to see if adding some noise leads to different results (compared to the previous example with no noise).
+
+## Data Generation
+
+```{r}
+# modified from Jason's code
+sim_8pops_with_noise <- function(indiv_sd, num_genes,
+                                 constrain_F = TRUE,
+                                 seed = 666) {
+  set.seed(seed)
+
+  n <- 8
+  p <- num_genes
+  branch_sds <- rep(1, 15)
+
+  LL <- matrix(0, nrow = n, ncol = 15)
+  LL[, 1] <- 1
+  LL[, 2] <- c(1, 1, 1, 1, 0, 0, 0, 0)
+  LL[, 3] <- c(0, 0, 0, 0, 1, 1, 1, 1)
+  LL[, 4] <- c(1, 1, 0, 0, 0, 0, 0, 0)
+  LL[, 5] <- c(0, 0, 1, 1, 0, 0, 0, 0)
+  LL[, 6] <- c(0, 0, 0, 0, 1, 1, 0, 0)
+  LL[, 7] <- c(0, 0, 0, 0, 0, 0, 1, 1)
+  LL[, c(8:15)] <- diag(rep(1, 8))
+  
+  FF <- matrix(rnorm(15 * p, sd = rep(branch_sds, each = p)), ncol = 15)
+  if (constrain_F) {
+    FF_svd <- svd(FF)
+    FF <- FF_svd$u
+    FF <- t(t(FF) * branch_sds * sqrt(p))
+  }
+  
+  E <- matrix(rnorm(n * p, sd = indiv_sd), nrow = n)
+  Y <- LL %*% t(FF)  + E
+  YYt <- tcrossprod(Y)
+  D2 <- compute_distance(crossprod_X = YYt)
+  
+  return(list(D2 = D2, Y = Y, LL = LL, FF = FF))
+}
+```
+
+```{r}
+dist_data_8pop_noise <- sim_8pops_with_noise(indiv_sd = 0.5, num_genes = 20)
+```
+
+```{r}
+dist_data_8pop_noise$D2
+```
+
+## Using Penalized Regression with Standardization to Factorize
+
+### Hypothesis
+
+I hypothesize that the decomposition found is similar to that found in the previous example with no noise. 
+
+### Analysis
+
+This is a heatmap of the distance matrix:
+```{r}
+plot_heatmap(dist_data_8pop_noise$D2)
+```
+
+```{r}
+set.seed(2042)
+fit.regression_8pop_noise <- distance_matrix_factorization_standardized(dist_matrix = dist_data_8pop_noise$D2, alpha_l1 = 31)
+``` 
+
+```{r}
+dist_est_8pop_noise <- fit.regression_8pop_noise$dist_est
+```
+
+This is a heatmap of the estimated distance matrix:
+```{r}
+plot_heatmap(dist_est_8pop_noise)
+```
+
+This is a plot of the fitted values vs. observed values:
+```{r}
+ggplot(data = NULL, aes(x = c(dist_data_8pop_noise$D2), y = c(dist_est_8pop_noise))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = 'red') + xlab('Observed Values') + ylab('Fitted Values') 
+```
+
+This is a plot of the residuals:
+```{r}
+fit.residuals_8pop_noise <- c(dist_data_8pop_noise$D2) - c(dist_est_8pop_noise)
+ggplot(data = NULL, aes(x = c(1:length(fit.residuals_8pop_noise)), y = fit.residuals_8pop_noise)) + geom_point() + geom_hline(yintercept = 0)
+```
+
+This is a heatmap of the residuals:
+```{r}
+plot_heatmap(dist_data_8pop_noise$D2 - dist_est_8pop_noise)
+```
+
+This is the MSE:
+```{r}
+obj_function_from_fit(fit.regression_8pop_noise, 0)
+```
+
+This is the objective function value:
+```{r}
+obj_function_from_fit(fit.regression_8pop_noise, 20)
+```
+
+### Visualization of Loadings
+
+```{r}
+dim(fit.regression_8pop_noise$L_est)
+```
+
+This is a heatmap of the loadings:
+```{r}
+plot_heatmap(fit.regression_8pop_noise$L_est)
+```
+
+This is a heatmap of the standardized loadings:
+```{r}
+plot_heatmap(t(t(fit.regression_8pop_noise$L_est)/apply(fit.regression_8pop_noise$L_est,2, max)))
+```
+
+This is a structure plot of the loadings:
+```{r}
+structure_plot_general(fit.regression_8pop_noise$L_est, fit.regression_8pop_noise$L_est, 
+                       n_samples = 8,
+                       plot.colors = c('red','blue','green','yellow','orange','pink','purple','brown4','gray','skyblue','darkgreen','magenta'), normalize = FALSE)
+```
+
+This is a structure plot of the squared loadings:
+```{r}
+structure_plot_general(fit.regression_8pop_noise$L_est^2, fit.regression_8pop_noise$L_est^2, 
+                       n_samples = 8,
+                       plot.colors = c('red','blue','green','yellow','orange','pink','purple','brown4','gray','skyblue','darkgreen','magenta'), normalize = FALSE)
+```
+
+### Observations
+The decomposition found is similar to that found in the no noise example. We find 8 population specific factors. We also find the four 2 vs 2 factors that split the nodes containing 4 populations.
