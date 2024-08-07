@@ -390,7 +390,7 @@ class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span>
 <div class="tab-content">
 <div id="summary" class="tab-pane fade in active">
 <p>
-<strong>Last updated:</strong> 2024-08-05
+<strong>Last updated:</strong> 2024-08-07
 </p>
 <p>
 <strong>Checks:</strong> <span
@@ -522,15 +522,15 @@ project makes it easier to run your code on other machines.</p>
 <div class="panel panel-default">
 <div class="panel-heading">
 <p class="panel-title">
-<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomxxie6driftmatrixfactorizationtreeba9b6487af10d176126eda936a66f2965e33bfd0targetblankba9b648a">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomxxie6driftmatrixfactorizationtreeb516bce41d7a3989f59fcdf4dcd2de5e34c3b0f0targetblankb516bcea">
 <span class="glyphicon glyphicon-ok text-success"
 aria-hidden="true"></span> <strong>Repository version:</strong>
-<a href="https://github.com/xxie6/drift_matrix_factorization/tree/ba9b6487af10d176126eda936a66f2965e33bfd0" target="_blank">ba9b648</a>
+<a href="https://github.com/xxie6/drift_matrix_factorization/tree/b516bce41d7a3989f59fcdf4dcd2de5e34c3b0f0" target="_blank">b516bce</a>
 </a>
 </p>
 </div>
 <div
-id="strongRepositoryversionstrongahrefhttpsgithubcomxxie6driftmatrixfactorizationtreeba9b6487af10d176126eda936a66f2965e33bfd0targetblankba9b648a"
+id="strongRepositoryversionstrongahrefhttpsgithubcomxxie6driftmatrixfactorizationtreeb516bce41d7a3989f59fcdf4dcd2de5e34c3b0f0targetblankb516bcea"
 class="panel-collapse collapse">
 <div class="panel-body">
 <p>
@@ -540,7 +540,7 @@ reproducibility.
 </p>
 <p>
 The results in this page were generated with repository version
-<a href="https://github.com/xxie6/drift_matrix_factorization/tree/ba9b6487af10d176126eda936a66f2965e33bfd0" target="_blank">ba9b648</a>.
+<a href="https://github.com/xxie6/drift_matrix_factorization/tree/b516bce41d7a3989f59fcdf4dcd2de5e34c3b0f0" target="_blank">b516bce</a>.
 See the <em>Past versions</em> tab to see a history of the changes made
 to the R Markdown and HTML files.
 </p>
@@ -602,6 +602,40 @@ Message
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>
+Rmd
+</td>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/b516bce41d7a3989f59fcdf4dcd2de5e34c3b0f0/analysis/8-population-example.Rmd" target="_blank">b516bce</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-07
+</td>
+<td>
+Edit text
+</td>
+</tr>
+<tr>
+<td>
+html
+</td>
+<td>
+<a href="https://rawcdn.githack.com/xxie6/drift_matrix_factorization/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/8-population-example.html" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+<td>
+Build site.
+</td>
+</tr>
 <tr>
 <td>
 Rmd
@@ -877,9 +911,10 @@ sim_4pops_no_noise &lt;- function(
 [3,]    4    4    0    2
 [4,]    4    4    2    0</code></pre>
 </div>
-<div id="the-split-metric-we-want" class="section level2">
-<h2>The split metric we want</h2>
-<p>This is the split metric that we want the method to recover:</p>
+<div id="the-split-decomposition-we-want" class="section level2">
+<h2>The split decomposition we want</h2>
+<p>This is the split decomposition that we want the method to
+recover:</p>
 <pre class="r"><code>l1 &lt;- stats::dist((1/2)*c(1, 1, 0, 0), diag = TRUE, upper = TRUE)
 l2 &lt;- stats::dist(c(1, 0, 0, 0), diag = TRUE, upper = TRUE)
 l3 &lt;- stats::dist(c(0, 1, 0, 0), diag = TRUE, upper = TRUE)
@@ -907,6 +942,43 @@ vectors) will recover the drift factorization.</p>
 <p>This is a heatmap of the distance matrix:</p>
 <pre class="r"><code>plot_heatmap(dist_data_4pop$D2)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-15-1">
+Past versions of unnamed-chunk-15-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-15-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-15-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>set.seed(2042)
 fit.regression_4pop &lt;- distance_matrix_factorization_standardized(dist_matrix = dist_data_4pop$D2, alpha_l1 = 10^(-10))</code></pre>
 <pre><code>Warning in nnlm(LLt_options^2, as.matrix(D_lower_vec, ncol = 1), alpha = c(0, :
@@ -915,16 +987,164 @@ x does not have a full column rank. Solution may not be unique.</code></pre>
 <p>This is a heatmap of the estimated distance matrix:</p>
 <pre class="r"><code>plot_heatmap(dist_est_4pop)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-18-1">
+Past versions of unnamed-chunk-18-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-18-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-18-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a plot of the fitted values vs. observed values:</p>
 <pre class="r"><code>ggplot(data = NULL, aes(x = c(dist_data_4pop$D2), y = c(dist_est_4pop))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = &#39;red&#39;) + xlab(&#39;Observed Values&#39;) + ylab(&#39;Fitted Values&#39;)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-19-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-19-1">
+Past versions of unnamed-chunk-19-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-19-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-19-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a plot of the residuals:</p>
 <pre class="r"><code>fit.residuals_4pop &lt;- c(dist_data_4pop$D2) - c(dist_est_4pop)
 ggplot(data = NULL, aes(x = c(1:length(fit.residuals_4pop)), y = fit.residuals_4pop)) + geom_point() + geom_hline(yintercept = 0)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-20-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-20-1">
+Past versions of unnamed-chunk-20-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-20-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-20-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a heatmap of the residuals:</p>
 <pre class="r"><code>plot_heatmap(dist_est_4pop - dist_data_4pop$D2)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-21-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-21-1">
+Past versions of unnamed-chunk-21-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-21-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-21-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is the MSE:</p>
 <pre class="r"><code>obj_function_from_fit(fit.regression_4pop, 0)</code></pre>
 <pre><code>[1] 1.000988e-20</code></pre>
@@ -939,19 +1159,167 @@ ggplot(data = NULL, aes(x = c(1:length(fit.residuals_4pop)), y = fit.residuals_4
 <p>This is a heatmap of the loadings:</p>
 <pre class="r"><code>plot_heatmap(fit.regression_4pop$L_est)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-25-1">
+Past versions of unnamed-chunk-25-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-25-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-25-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a heatmap of the standardized loadings:</p>
 <pre class="r"><code>plot_heatmap(t(t(fit.regression_4pop$L_est)/apply(fit.regression_4pop$L_est,2, max)))</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-26-1">
+Past versions of unnamed-chunk-26-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-26-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-26-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a structure plot of the loadings:</p>
 <pre class="r"><code>structure_plot_general(fit.regression_4pop$L_est, fit.regression_4pop$L_est, 
                        n_samples = 4,
                        plot.colors = rainbow(5), normalize = FALSE)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-27-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-27-1">
+Past versions of unnamed-chunk-27-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-27-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-27-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a structure plot of the squared loadings:</p>
 <pre class="r"><code>structure_plot_general(fit.regression_4pop$L_est^2, fit.regression_4pop$L_est^2, 
                        n_samples = 4,
                        plot.colors = rainbow(5), normalize = FALSE)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-28-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-28-1">
+Past versions of unnamed-chunk-28-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-28-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-28-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="observations" class="section level3">
 <h3>Observations</h3>
@@ -1007,9 +1375,9 @@ sim_8pops_no_noise &lt;- function(
 [7,]    6    6    6    6    4    4    0    2
 [8,]    6    6    6    6    4    4    2    0</code></pre>
 </div>
-<div id="the-split-metric-we-want-1" class="section level2">
-<h2>The split metric we want</h2>
-<p>This is the split metric we want.</p>
+<div id="the-split-decomposition-we-want-1" class="section level2">
+<h2>The split decomposition we want</h2>
+<p>This is the split decomposition we want.</p>
 <pre class="r"><code>l1 &lt;- stats::dist((1/4)*c(1, 1, 1, 1, 0, 0, 0, 0), diag = TRUE, upper = TRUE)
 l2 &lt;- stats::dist((1/2)*c(1, 1, 0, 0, 0, 0, 0, 0), diag = TRUE, upper = TRUE)
 l3 &lt;- stats::dist((1/2)*c(0, 0, 1, 1, 0, 0, 0, 0), diag = TRUE, upper = TRUE)
@@ -1051,6 +1419,43 @@ recover the drift factorization.</p>
 <p>This is a heatmap of the distance matrix:</p>
 <pre class="r"><code>plot_heatmap(dist_data_8pop$D2)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-34-1">
+Past versions of unnamed-chunk-34-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-34-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-34-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>set.seed(2042)
 fit.regression_8pop &lt;- distance_matrix_factorization_standardized(dist_matrix = dist_data_8pop$D2, alpha_l1 = 1)</code></pre>
 <pre><code>Warning in nnlm(LLt_options^2, as.matrix(D_lower_vec, ncol = 1), alpha = c(0, :
@@ -1059,16 +1464,164 @@ x does not have a full column rank. Solution may not be unique.</code></pre>
 <p>This is a heatmap of the estimated distance matrix:</p>
 <pre class="r"><code>plot_heatmap(dist_est_8pop)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-37-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-37-1">
+Past versions of unnamed-chunk-37-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-37-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-37-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a plot of the fitted values vs. observed values:</p>
 <pre class="r"><code>ggplot(data = NULL, aes(x = c(dist_data_8pop$D2), y = c(dist_est_8pop))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = &#39;red&#39;) + xlab(&#39;Observed Values&#39;) + ylab(&#39;Fitted Values&#39;)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-38-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-38-1">
+Past versions of unnamed-chunk-38-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-38-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-38-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a plot of the residuals:</p>
 <pre class="r"><code>fit.residuals_8pop &lt;- c(dist_est_8pop) - c(dist_data_8pop$D2)
 ggplot(data = NULL, aes(x = c(1:length(fit.residuals_8pop)), y = fit.residuals_8pop)) + geom_point() + geom_hline(yintercept = 0)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-39-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-39-1">
+Past versions of unnamed-chunk-39-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-39-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-39-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a heatmap of the residuals:</p>
 <pre class="r"><code>plot_heatmap(dist_est_8pop - dist_data_8pop$D2)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-40-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-40-1">
+Past versions of unnamed-chunk-40-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-40-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-40-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is the MSE:</p>
 <pre class="r"><code>obj_function_from_fit(fit.regression_8pop, 0)</code></pre>
 <pre><code>[1] 1</code></pre>
@@ -1083,21 +1636,169 @@ ggplot(data = NULL, aes(x = c(1:length(fit.residuals_8pop)), y = fit.residuals_8
 <p>This is a heatmap of the loadings:</p>
 <pre class="r"><code>plot_heatmap(fit.regression_8pop$L_est)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-44-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-44-1">
+Past versions of unnamed-chunk-44-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-44-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-44-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a heatmap of the standardized loadings:</p>
 <pre class="r"><code>plot_heatmap(t(t(fit.regression_8pop$L_est)/apply(fit.regression_8pop$L_est,2, max)))</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-45-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-45-1">
+Past versions of unnamed-chunk-45-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-45-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-45-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a structure plot of the loadings:</p>
 <pre class="r"><code>structure_plot_general(fit.regression_8pop$L_est, fit.regression_8pop$L_est, 
                        n_samples = 8,
                        plot.colors = c(&#39;red&#39;,&#39;blue&#39;,&#39;green&#39;,&#39;yellow&#39;,&#39;orange&#39;,&#39;pink&#39;,&#39;purple&#39;,&#39;brown4&#39;,&#39;gray&#39;,&#39;skyblue&#39;,&#39;darkgreen&#39;,&#39;magenta&#39;,&#39;darkseagreen1&#39;, &#39;darkslategray&#39;, &#39;gold&#39;,&#39;navy&#39;),
                        normalize = FALSE)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-46-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-46-1">
+Past versions of unnamed-chunk-46-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-46-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-46-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a structure plot of the squared loadings:</p>
 <pre class="r"><code>structure_plot_general(fit.regression_8pop$L_est^2, fit.regression_8pop$L_est^2, 
                        n_samples = 8,
                        plot.colors = c(&#39;red&#39;,&#39;blue&#39;,&#39;green&#39;,&#39;yellow&#39;,&#39;orange&#39;,&#39;pink&#39;,&#39;purple&#39;,&#39;brown4&#39;,&#39;gray&#39;,&#39;skyblue&#39;,&#39;darkgreen&#39;,&#39;magenta&#39;,&#39;darkseagreen1&#39;, &#39;darkslategray&#39;, &#39;gold&#39;,&#39;navy&#39;),
                        normalize = FALSE)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-47-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-47-1">
+Past versions of unnamed-chunk-47-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-47-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-47-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="observations-1" class="section level3">
 <h3>Observations</h3>
@@ -1150,21 +1851,169 @@ x does not have a full column rank. Solution may not be unique.</code></pre>
 <p>This is a heatmap of the loadings:</p>
 <pre class="r"><code>plot_heatmap(fit.regression_8pop_nosingle$L_est)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-52-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-52-1">
+Past versions of unnamed-chunk-52-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-52-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-52-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a heatmap of the standardized loadings:</p>
 <pre class="r"><code>plot_heatmap(t(t(fit.regression_8pop_nosingle$L_est)/apply(fit.regression_8pop_nosingle$L_est,2, max)))</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-53-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-53-1">
+Past versions of unnamed-chunk-53-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-53-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-53-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a structure plot of the loadings:</p>
 <pre class="r"><code>structure_plot_general(fit.regression_8pop_nosingle$L_est, fit.regression_8pop_nosingle$L_est, 
                        n_samples = 8,
                        plot.colors = c(&#39;red&#39;,&#39;blue&#39;,&#39;green&#39;,&#39;yellow&#39;,&#39;orange&#39;,&#39;pink&#39;,&#39;purple&#39;,&#39;brown4&#39;,&#39;gray&#39;,&#39;skyblue&#39;,&#39;darkgreen&#39;,&#39;magenta&#39;,&#39;darkseagreen1&#39;, &#39;darkslategray&#39;, &#39;gold&#39;,&#39;navy&#39;),
                        normalize = FALSE)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-54-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-54-1">
+Past versions of unnamed-chunk-54-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-54-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-54-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a structure plot of the squared loadings:</p>
 <pre class="r"><code>structure_plot_general(fit.regression_8pop_nosingle$L_est^2, fit.regression_8pop_nosingle$L_est^2, 
                        n_samples = 8,
                        plot.colors = c(&#39;red&#39;,&#39;blue&#39;,&#39;green&#39;,&#39;yellow&#39;,&#39;orange&#39;,&#39;pink&#39;,&#39;purple&#39;,&#39;brown4&#39;,&#39;gray&#39;,&#39;skyblue&#39;,&#39;darkgreen&#39;,&#39;magenta&#39;,&#39;darkseagreen1&#39;, &#39;darkslategray&#39;, &#39;gold&#39;,&#39;navy&#39;),
                        normalize = FALSE)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-55-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-55-1">
+Past versions of unnamed-chunk-55-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-55-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-55-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="observations-2" class="section level3">
 <h3>Observations</h3>
@@ -1174,7 +2023,7 @@ method used other 2 vs 6 factors to model the single population
 effects.</p>
 <p>Here is a small example of this phenomenon in the 4 population
 case:</p>
-<p>The split metric we want:</p>
+<p>The split decomposition we want:</p>
 <pre class="r"><code>h1 &lt;- stats::dist((1/2)*c(1, 1, 0, 0), diag = TRUE, upper = TRUE)
 h2 &lt;- stats::dist(c(1, 0, 0, 0), diag = TRUE, upper = TRUE)
 h3 &lt;- stats::dist(c(0, 1, 0, 0), diag = TRUE, upper = TRUE)
@@ -1186,7 +2035,7 @@ h5 &lt;- stats::dist(c(0, 0, 0, 1), diag = TRUE, upper = TRUE)</code></pre>
 2 2 0 4 4
 3 4 4 0 2
 4 4 4 2 0</code></pre>
-<p>An alternative split metric:</p>
+<p>An alternative split decomposition:</p>
 <pre class="r"><code>b1 &lt;- stats::dist((1/2)*c(1,0,1,0), diag = TRUE, upper = TRUE)
 b2 &lt;- stats::dist((1/2)*c(0,1,1,0), diag = TRUE, upper = TRUE)
 b3 &lt;- stats::dist((1/2)*c(1,0,0,1), diag = TRUE, upper = TRUE)
@@ -1228,14 +2077,125 @@ does not have a full column rank. Solution may not be unique.</code></pre>
 <p>This is a heatmap of the loadings:</p>
 <pre class="r"><code>plot_heatmap(fit.regression$L_est)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-64-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-64-1">
+Past versions of unnamed-chunk-64-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-64-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-64-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a heatmap of the standardized loadings:</p>
 <pre class="r"><code>plot_heatmap(t(t(fit.regression$L_est)/apply(fit.regression$L_est,2, max)))</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-65-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-65-1">
+Past versions of unnamed-chunk-65-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-65-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-65-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>structure_plot_general(fit.regression$L_est^2, fit.regression$L_est^2, 
                        n_samples = 8,
                        plot.colors = c(&#39;red&#39;,&#39;blue&#39;,&#39;green&#39;,&#39;yellow&#39;,&#39;orange&#39;,&#39;pink&#39;,&#39;purple&#39;,&#39;brown4&#39;,&#39;gray&#39;,&#39;skyblue&#39;,&#39;darkgreen&#39;,&#39;magenta&#39;,&#39;darkseagreen1&#39;, &#39;darkslategray&#39;, &#39;gold&#39;,&#39;navy&#39;),
                        normalize = FALSE)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-66-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-66-1">
+Past versions of unnamed-chunk-66-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-66-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-66-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="observations-3" class="section level3">
 <h3>Observations</h3>
@@ -1330,6 +2290,43 @@ in the previous example with no noise.</p>
 <p>This is a heatmap of the distance matrix:</p>
 <pre class="r"><code>plot_heatmap(dist_data_8pop_noise$D2)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-70-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-70-1">
+Past versions of unnamed-chunk-70-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-70-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-70-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <pre class="r"><code>set.seed(2042)
 fit.regression_8pop_noise &lt;- distance_matrix_factorization_standardized(dist_matrix = dist_data_8pop_noise$D2, alpha_l1 = 31)</code></pre>
 <pre><code>Warning in nnlm(LLt_options^2, as.matrix(D_lower_vec, ncol = 1), alpha = c(0, :
@@ -1338,16 +2335,164 @@ x does not have a full column rank. Solution may not be unique.</code></pre>
 <p>This is a heatmap of the estimated distance matrix:</p>
 <pre class="r"><code>plot_heatmap(dist_est_8pop_noise)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-73-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-73-1">
+Past versions of unnamed-chunk-73-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-73-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-73-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a plot of the fitted values vs. observed values:</p>
 <pre class="r"><code>ggplot(data = NULL, aes(x = c(dist_data_8pop_noise$D2), y = c(dist_est_8pop_noise))) + geom_point() + geom_abline(intercept = 0, slope = 1, color = &#39;red&#39;) + xlab(&#39;Observed Values&#39;) + ylab(&#39;Fitted Values&#39;) </code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-74-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-74-1">
+Past versions of unnamed-chunk-74-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-74-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-74-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a plot of the residuals:</p>
 <pre class="r"><code>fit.residuals_8pop_noise &lt;- c(dist_data_8pop_noise$D2) - c(dist_est_8pop_noise)
 ggplot(data = NULL, aes(x = c(1:length(fit.residuals_8pop_noise)), y = fit.residuals_8pop_noise)) + geom_point() + geom_hline(yintercept = 0)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-75-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-75-1">
+Past versions of unnamed-chunk-75-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-75-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-75-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a heatmap of the residuals:</p>
 <pre class="r"><code>plot_heatmap(dist_data_8pop_noise$D2 - dist_est_8pop_noise)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-76-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-76-1">
+Past versions of unnamed-chunk-76-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-76-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-76-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is the MSE:</p>
 <pre class="r"><code>obj_function_from_fit(fit.regression_8pop_noise, 0)</code></pre>
 <pre><code>[1] 557.5629</code></pre>
@@ -1362,19 +2507,167 @@ ggplot(data = NULL, aes(x = c(1:length(fit.residuals_8pop_noise)), y = fit.resid
 <p>This is a heatmap of the loadings:</p>
 <pre class="r"><code>plot_heatmap(fit.regression_8pop_noise$L_est)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-80-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-80-1">
+Past versions of unnamed-chunk-80-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-80-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-80-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a heatmap of the standardized loadings:</p>
 <pre class="r"><code>plot_heatmap(t(t(fit.regression_8pop_noise$L_est)/apply(fit.regression_8pop_noise$L_est,2, max)))</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-81-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-81-1">
+Past versions of unnamed-chunk-81-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-81-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-81-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a structure plot of the loadings:</p>
 <pre class="r"><code>structure_plot_general(fit.regression_8pop_noise$L_est, fit.regression_8pop_noise$L_est, 
                        n_samples = 8,
                        plot.colors = c(&#39;red&#39;,&#39;blue&#39;,&#39;green&#39;,&#39;yellow&#39;,&#39;orange&#39;,&#39;pink&#39;,&#39;purple&#39;,&#39;brown4&#39;,&#39;gray&#39;,&#39;skyblue&#39;,&#39;darkgreen&#39;,&#39;magenta&#39;), normalize = FALSE)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-82-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-82-1">
+Past versions of unnamed-chunk-82-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-82-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-82-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 <p>This is a structure plot of the squared loadings:</p>
 <pre class="r"><code>structure_plot_general(fit.regression_8pop_noise$L_est^2, fit.regression_8pop_noise$L_est^2, 
                        n_samples = 8,
                        plot.colors = c(&#39;red&#39;,&#39;blue&#39;,&#39;green&#39;,&#39;yellow&#39;,&#39;orange&#39;,&#39;pink&#39;,&#39;purple&#39;,&#39;brown4&#39;,&#39;gray&#39;,&#39;skyblue&#39;,&#39;darkgreen&#39;,&#39;magenta&#39;), normalize = FALSE)</code></pre>
 <p><img src="figure/8-population-example.Rmd/unnamed-chunk-83-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>
+<button type="button" class="btn btn-default btn-xs btn-workflowr btn-workflowr-fig" data-toggle="collapse" data-target="#fig-unnamed-chunk-83-1">
+Past versions of unnamed-chunk-83-1.png
+</button>
+</p>
+<div id="fig-unnamed-chunk-83-1" class="collapse">
+<div class="table-responsive">
+<table class="table table-condensed table-hover">
+<thead>
+<tr>
+<th>
+Version
+</th>
+<th>
+Author
+</th>
+<th>
+Date
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<a href="https://github.com/xxie6/drift_matrix_factorization/blob/22aaf9bef5672c3058cd44622274ddc9d64ab055/docs/figure/8-population-example.Rmd/unnamed-chunk-83-1.png" target="_blank">22aaf9b</a>
+</td>
+<td>
+Annie Xie
+</td>
+<td>
+2024-08-05
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
 </div>
 <div id="observations-4" class="section level3">
 <h3>Observations</h3>
