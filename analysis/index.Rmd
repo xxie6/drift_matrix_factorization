@@ -8,4 +8,15 @@ editor_options:
   chunk_output_type: console
 ---
 
-Welcome to my research website.
+This is my project on finding a split metric decomposition for distance matrices.  
+  
+Simulations:  
+  
+* Results for the [distance-based regression method (without standardization) on a four population dataset](distance-based-regression-simulation.html)
+* Results for the [distance-based regression method with standardization on an eight population dataset](8-population-example.html). 
+
+
+These are old analysis files for a data-based regression method:  
+
+* Results for the [data-based regression method on a four population dataset](four-population-simulation.html)
+* Results [comparing the data-based regression method with EBCD and GBCD on a six population dataset](regression-simulation.html)
